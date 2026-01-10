@@ -1,0 +1,99 @@
+{
+  "name": "In Rainbows",
+  "author": "ported + refined from catriverr/inrainbows.vim",
+  "themes": [
+    {
+      "name": "In Rainbows Dark",
+      "appearance": "dark",
+      "style": {
+        "background": "#000000FF",
+        "surface.background": "#000000FF",
+        "elevated_surface.background": "#000000FF",
+
+        "text": "#DADADAFF",
+        "text.muted": "#9AA0A6FF",
+        "text.disabled": "#7A7A7AFF",
+        "text.placeholder": "#BFAE70FF",
+
+        "icon": "#DADADAFF",
+        "icon.muted": "#9AA0A6FF",
+        "icon.disabled": "#6A6A6AFF",
+
+        "border": "#1A1A1AFF",
+        "border.variant": "#121212FF",
+        "border.focused": "#F7EE49FF",
+        "border.selected": "#2A2A2AFF",
+        "border.transparent": "#00000000",
+
+        "status_bar.background": "#000000FF",
+        "title_bar.background": "#000000FF",
+        "toolbar.background": "#000000FF",
+
+        "tab_bar.background": "#000000FF",
+        "tab.active_background": "#000000FF",
+        "tab.inactive_background": "#000000FF",
+
+        "panel.background": "#000000FF",
+
+        "search.match_background": "#F7EE49FF",
+
+        "editor.background": "#000000FF",
+        "editor.foreground": "#DADADAFF",
+        "editor.gutter.background": "#000000FF",
+        "editor.line_number": "#9AA0A6FF",
+        "editor.active_line_number": "#A4DDE6FF",
+
+        "editor.active_line.background": "#45454533",
+        "editor.highlighted_line.background": "#45454533",
+        "editor.invisible": "#5A5A5AFF",
+
+        "terminal.background": "#000000FF",
+        "terminal.foreground": "#DADADAFF",
+
+        "created": "#45B64AFF",
+        "deleted": "#EC2427FF",
+        "modified": "#EDB41FFF",
+
+        "error": "#EC2427FF",
+        "warning": "#EDB41FFF",
+        "info": "#A4DDE6FF",
+        "hint": "#45B64AFF",
+
+        "element.background": "#000000FF",
+        "element.hover": "#FFFFFF0D",
+        "element.selected": "#FFFFFF14",
+        "element.active": "#FFFFFF14",
+        "element.disabled": "#000000FF",
+
+        "syntax": {
+          "comment": {
+            "color": "#9AA0A6FF",
+            "font_style": "normal"
+          },
+        
+          /* Preprocessor */
+          "keyword": { "color": "#F36525FF" },          // <-- directives (#define, #include)
+          "directive": { "color": "#F36525FF" },        // safety fallback
+          "macro": { "color": "#EC2427FF" },             // macro identifiers
+          "constant.macro": { "color": "#EC2427FF" },
+        
+          /* Literals */
+          "string": { "color": "#45B64AFF" },
+          "number": { "color": "#45B64AFF" },
+          "constant": { "color": "#EC2427FF" },
+        
+          /* Structure */
+          "function": { "color": "#EDB41FFF" },
+          "type": { "color": "#4686C6FF" },
+          "statement": { "color": "#4686C6FF" },
+        
+          /* Identifiers */
+          "variable": { "color": "#A4DDE6FF" },
+          "operator": { "color": "#F36525FF" },
+          "punctuation": { "color": "#A4DDE6FF" }
+        }
+
+      }
+    }
+  ]
+}
