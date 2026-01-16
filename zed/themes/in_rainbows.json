@@ -3,96 +3,139 @@
   "author": "ported + refined from catriverr/inrainbows.vim",
   "themes": [
     {
+      "name": "In Rainbows Light",
+      "appearance": "light",
+      "style": {
+        "background": "#FAF8F5FF",
+        "surface.background": "#FAF8F5FF",
+        "elevated_surface.background": "#FFFEFCFF",
+        "text": "#1A1A1AFF",
+        "text.muted": "#5A5A5AFF",
+        "text.disabled": "#8A8A8AFF",
+        "text.placeholder": "#8B7A3CFF",
+        "icon": "#1A1A1AFF",
+        "icon.muted": "#5A5A5AFF",
+        "icon.disabled": "#9A9A9AFF",
+        "border": "#E5E2DCFF",
+        "border.variant": "#EDEAE4FF",
+        "border.focused": "#D4A017FF",
+        "border.selected": "#D5D2CCFF",
+        "border.transparent": "#00000000",
+        "status_bar.background": "#FAF8F5FF",
+        "title_bar.background": "#FAF8F5FF",
+        "toolbar.background": "#FAF8F5FF",
+        "tab_bar.background": "#FAF8F5FF",
+        "tab.active_background": "#FFFEFCFF",
+        "tab.inactive_background": "#F0EDE8FF",
+        "panel.background": "#F5F2EDFF",
+        "search.match_background": "#F7EE4966",
+        "editor.background": "#FAF8F5FF",
+        "editor.foreground": "#1A1A1AFF",
+        "editor.gutter.background": "#FAF8F5FF",
+        "editor.line_number": "#9A9A9AFF",
+        "editor.active_line_number": "#2B7A87FF",
+        "editor.active_line.background": "#00000008",
+        "editor.highlighted_line.background": "#00000008",
+        "editor.invisible": "#C5C5C5FF",
+        "terminal.background": "#FAF8F5FF",
+        "terminal.foreground": "#1A1A1AFF",
+        "created": "#3A9A3FFF",
+        "deleted": "#D11F22FF",
+        "modified": "#C9960AFF",
+        "error": "#D11F22FF",
+        "warning": "#C9960AFF",
+        "info": "#2B7A87FF",
+        "hint": "#3A9A3FFF",
+        "element.background": "#FAF8F5FF",
+        "element.hover": "#0000000D",
+        "element.selected": "#00000014",
+        "element.active": "#00000014",
+        "element.disabled": "#FAF8F5FF",
+        "syntax": {
+          "comment": { "color": "#7A7A7AFF", "font_style": "normal" },
+          "keyword": { "color": "#F36525FF" },
+          "directive": { "color": "#F36525FF" },
+          "preproc": { "color": "#F36525FF" },
+          "macro": { "color": "#EC2427FF" },
+          "constant.macro": { "color": "#EC2427FF" },
+          "string": { "color": "#3A9A3FFF" },
+          "number": { "color": "#3A9A3FFF" },
+          "constant": { "color": "#D11F22FF" },
+          "function": { "color": "#D11F22FF" },
+          "type": { "color": "#3B72A8FF" },
+          "statement": { "color": "#3B72A8FF" },
+          "variable": { "color": "#1A5A64FF" },
+          "operator": { "color": "#F36525FF" },
+          "punctuation": { "color": "#2B7A87FF" }
+        }
+      }
+    },
+    {
       "name": "In Rainbows Dark",
       "appearance": "dark",
       "style": {
         "background": "#000000FF",
         "surface.background": "#000000FF",
         "elevated_surface.background": "#000000FF",
-
         "text": "#DADADAFF",
         "text.muted": "#9AA0A6FF",
         "text.disabled": "#7A7A7AFF",
         "text.placeholder": "#BFAE70FF",
-
         "icon": "#DADADAFF",
         "icon.muted": "#9AA0A6FF",
         "icon.disabled": "#6A6A6AFF",
-
         "border": "#1A1A1AFF",
         "border.variant": "#121212FF",
         "border.focused": "#F7EE49FF",
         "border.selected": "#2A2A2AFF",
         "border.transparent": "#00000000",
-
         "status_bar.background": "#000000FF",
         "title_bar.background": "#000000FF",
         "toolbar.background": "#000000FF",
-
         "tab_bar.background": "#000000FF",
         "tab.active_background": "#000000FF",
         "tab.inactive_background": "#000000FF",
-
         "panel.background": "#000000FF",
-
         "search.match_background": "#F7EE49FF",
-
         "editor.background": "#000000FF",
         "editor.foreground": "#DADADAFF",
         "editor.gutter.background": "#000000FF",
         "editor.line_number": "#9AA0A6FF",
         "editor.active_line_number": "#A4DDE6FF",
-
         "editor.active_line.background": "#45454533",
         "editor.highlighted_line.background": "#45454533",
         "editor.invisible": "#5A5A5AFF",
-
         "terminal.background": "#000000FF",
         "terminal.foreground": "#DADADAFF",
-
         "created": "#45B64AFF",
         "deleted": "#EC2427FF",
         "modified": "#EDB41FFF",
-
         "error": "#EC2427FF",
         "warning": "#EDB41FFF",
         "info": "#A4DDE6FF",
         "hint": "#45B64AFF",
-
         "element.background": "#000000FF",
         "element.hover": "#FFFFFF0D",
         "element.selected": "#FFFFFF14",
         "element.active": "#FFFFFF14",
         "element.disabled": "#000000FF",
-
         "syntax": {
-          "comment": {
-            "color": "#9AA0A6FF",
-            "font_style": "normal"
-          },
-        
-          /* Preprocessor */
-          "keyword": { "color": "#F36525FF" },          // <-- directives (#define, #include)
-          "directive": { "color": "#F36525FF" },        // safety fallback
-          "macro": { "color": "#EC2427FF" },             // macro identifiers
+          "comment": { "color": "#9AA0A6FF", "font_style": "normal" },
+          "keyword": { "color": "#F36525FF" },
+          "directive": { "color": "#F36525FF" },
+          "preproc": { "color": "#F36525FF" },
+          "macro": { "color": "#EC2427FF" },
           "constant.macro": { "color": "#EC2427FF" },
-        
-          /* Literals */
           "string": { "color": "#45B64AFF" },
           "number": { "color": "#45B64AFF" },
           "constant": { "color": "#EC2427FF" },
-        
-          /* Structure */
-          "function": { "color": "#EDB41FFF" },
+          "function": { "color": "#EC2427FF" },
           "type": { "color": "#4686C6FF" },
           "statement": { "color": "#4686C6FF" },
-        
-          /* Identifiers */
           "variable": { "color": "#A4DDE6FF" },
           "operator": { "color": "#F36525FF" },
           "punctuation": { "color": "#A4DDE6FF" }
         }
-
       }
     }
   ]

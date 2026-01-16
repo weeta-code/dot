@@ -7,6 +7,14 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "context_servers": {
+    "mcp-server-context7": {
+      "enabled": true,
+      "settings": {
+        "context7_api_key": "ctx7sk-cc29c176-24e4-4151-8633-8481dcd86fc2"
+      }
+    }
+  },
   "edit_predictions": {
     "mode": "subtle"
   },
@@ -45,7 +53,7 @@
       "provider": "anthropic",
       "model": "claude-opus-4-5-thinking-latest"
     },
-    "default_profile": "ask",
+    "default_profile": "write",
     "default_model": {
       "provider": "anthropic",
       "model": "claude-opus-4-5-thinking-latest"
@@ -59,8 +67,8 @@
   "buffer_font_size": 15,
 
   "theme": {
-    "mode": "dark",
-    "light": "Gruvbox Light Hard",
+    "mode": "light",
+    "light": "In Rainbows Light",
     "dark": "In Rainbows Dark"
   }
 }
