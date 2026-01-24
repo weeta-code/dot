@@ -3,6 +3,9 @@ eval "$(zoxide init zsh)"
 export PATH="$HOME/.local/bin:$PATH"
 export EDITOR="nvim"
 
+# mise - polyglot tool version manager
+eval "$($HOME/.local/bin/mise activate zsh)"
+
 # opencode
 export PATH=/Users/mira/.opencode/bin:$PATH
 
