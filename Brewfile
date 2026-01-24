@@ -15,3 +15,6 @@ brew "tree"        # Directory listing (not in mise)
 brew "wget"        # HTTP downloads
 brew "zoxide"      # Smart cd (referenced in .zshrc)
 brew "stow"        # Symlink farm manager (if needed)
+tap "nikitabobko/tap"
+cask "aerospace"
+brew "sesh"
