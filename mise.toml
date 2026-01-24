@@ -6,10 +6,11 @@ EDITOR = "nvim"
 DOTFILES = "~/.config"
 
 [tools]
-# Languages - mise installs these automatically
-node = "lts"
-python = "3.12"
+# Languages - all latest stable
+node = "latest"
+python = "latest"
 go = "latest"
+rust = "latest"
 
 # CLI tools
 ripgrep = "latest"
@@ -17,6 +18,15 @@ fd = "latest"
 fzf = "latest"
 lazygit = "latest"
 neovim = "latest"
+tmux = "latest"
+ffmpeg = "latest"
+jq = "latest"
+
+# LSP servers (mise-installable)
+"npm:typescript-language-server" = "latest"
+"npm:pyright" = "latest"
+"go:golang.org/x/tools/gopls" = "latest"
+lua-language-server = "latest"
 
 [tasks.setup]
 description = "Full dotfiles setup for workstations (macOS/Linux desktop)"
@@ -49,7 +59,7 @@ run = "mise install"
 
 [tasks."tools:core"]
 description = "Install only core CLI tools (no GUI)"
-run = "mise install node python go ripgrep fd fzf neovim"
+run = "mise install node python go ripgrep fd fzf neovim tmux"
 
 [tasks.update]
 description = "Pull latest dotfiles and update tools"
@@ -72,3 +82,7 @@ else
     echo "Skipping brew (not macOS or brew not installed)"
 fi
 """
+
+[tasks.upgrade]
+description = "Upgrade all tools to latest versions"
+run = "mise upgrade"
