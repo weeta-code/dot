@@ -6,11 +6,12 @@ EDITOR = "nvim"
 DOTFILES = "~/.config"
 
 [tools]
-# Languages - all latest stable
+# Languages - all latest stable (invariants: go, python, c/c++, lua)
 node = "latest"
 python = "latest"
 go = "latest"
 rust = "latest"
+lua = "latest"
 
 # CLI tools
 ripgrep = "latest"
@@ -30,8 +31,26 @@ lua-language-server = "latest"
 
 [tasks.setup]
 description = "Full dotfiles setup for workstations (macOS/Linux desktop)"
-depends = ["link", "tools"]
+depends = ["xcode", "link", "tools", "brew"]
 run = "echo '✓ Dotfiles setup complete!'"
+
+[tasks.xcode]
+description = "Install Xcode Command Line Tools (macOS only)"
+run = """
+#!/bin/bash
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    if ! xcode-select -p &>/dev/null; then
+        echo "Installing Xcode Command Line Tools..."
+        xcode-select --install
+        echo "⚠️  Please complete the installation dialog, then re-run setup"
+        exit 1
+    else
+        echo "✓ Xcode CLI tools already installed"
+    fi
+else
+    echo "Skipping (not macOS)"
+fi
+"""
 
 [tasks."setup:server"]
 description = "Minimal setup for servers/homelab (no GUI tools)"
