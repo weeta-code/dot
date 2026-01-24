@@ -1,0 +1,31 @@
+# Ghostty configuration
+# https://ghostty.org/docs/config
+
+font-family = Monaco
+
+background = #000000
+foreground = #dadada
+background-opacity = 0.9
+macos-titlebar-style = "transparent"
+
+cursor-color = #dadada
+selection-background = #454545
+selection-foreground = #dadada
+
+palette = 0=#000000
+palette = 1=#ec2427
+palette = 2=#45b64a
+palette = 3=#edb41f
+palette = 4=#4686c6
+palette = 5=#f36525
+palette = 6=#a4dde6
+palette = 7=#dadada
+
+palette = 8=#6e6a86
+palette = 9=#ec2427
+palette = 10=#45b64a
+palette = 11=#F7EE49
+palette = 12=#4686c6
+palette = 13=#f36525
+palette = 14=#a4dde6
+palette = 15=#ffffff
