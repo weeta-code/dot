@@ -1,0 +1,74 @@
+# Dotfiles mise configuration
+# Run `mise run setup` on any new machine after cloning
+
+[env]
+EDITOR = "nvim"
+DOTFILES = "~/.config"
+
+[tools]
+# Languages - mise installs these automatically
+node = "lts"
+python = "3.12"
+go = "latest"
+
+# CLI tools
+ripgrep = "latest"
+fd = "latest"
+fzf = "latest"
+lazygit = "latest"
+neovim = "latest"
+
+[tasks.setup]
+description = "Full dotfiles setup for workstations (macOS/Linux desktop)"
+depends = ["link", "tools"]
+run = "echo '✓ Dotfiles setup complete!'"
+
+[tasks."setup:server"]
+description = "Minimal setup for servers/homelab (no GUI tools)"
+depends = ["link", "tools:core"]
+run = "echo '✓ Server setup complete!'"
+
+[tasks.link]
+description = "Create symlinks for home directory dotfiles"
+run = """
+#!/bin/bash
+set -e
+DOTFILES="$HOME/.config"
+
+# Home directory dotfiles
+ln -sf "$DOTFILES/home/.zshrc" "$HOME/.zshrc"
+ln -sf "$DOTFILES/home/.tmux.conf" "$HOME/.tmux.conf"
+ln -sf "$DOTFILES/home/.gitconfig" "$HOME/.gitconfig"
+
+echo "✓ Dotfiles linked"
+"""
+
+[tasks.tools]
+description = "Install all mise-managed tools"
+run = "mise install"
+
+[tasks."tools:core"]
+description = "Install only core CLI tools (no GUI)"
+run = "mise install node python go ripgrep fd fzf neovim"
+
+[tasks.update]
+description = "Pull latest dotfiles and update tools"
+run = """
+#!/bin/bash
+set -e
+cd ~/.config
+git pull
+mise install
+echo "✓ Dotfiles updated"
+"""
+
+[tasks.brew]
+description = "Install Homebrew packages (macOS only)"
+run = """
+#!/bin/bash
+if [[ "$OSTYPE" == "darwin"* ]] && command -v brew &>/dev/null; then
+    brew bundle --file="$HOME/.config/Brewfile" 2>/dev/null || echo "No Brewfile found"
+else
+    echo "Skipping brew (not macOS or brew not installed)"
+fi
+"""
