@@ -16,6 +16,7 @@ brew "wget"        # HTTP downloads
 brew "zoxide"      # Smart cd (referenced in .zshrc)
 brew "stow"        # Symlink farm manager (if needed)
 brew "sesh"
+cask "font-hack-nerd-font"
 
 # Casks (macOS apps)
 tap "nikitabobko/tap"
@@ -23,3 +24,4 @@ cask "aerospace"
 cask "ghostty"
 tap "FelixKratz/formulae"
 brew "borders"
+brew "sketchybar"

@@ -31,8 +31,20 @@ lua-language-server = "latest"
 
 [tasks.setup]
 description = "Full dotfiles setup for workstations (macOS/Linux desktop)"
-depends = ["xcode", "link", "tools", "brew"]
+depends = ["xcode", "omz", "link", "tools", "brew", "services"]
 run = "echo '✓ Dotfiles setup complete!'"
+
+[tasks.omz]
+description = "Install Oh My Zsh if not present"
+run = """
+#!/bin/bash
+if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+    echo "Installing Oh My Zsh..."
+    RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+else
+    echo "✓ Oh My Zsh already installed"
+fi
+"""
 
 [tasks.xcode]
 description = "Install Xcode Command Line Tools (macOS only)"
@@ -68,6 +80,11 @@ DOTFILES="$HOME/.config"
 ln -sf "$DOTFILES/home/.zshrc" "$HOME/.zshrc"
 ln -sf "$DOTFILES/home/.tmux.conf" "$HOME/.tmux.conf"
 ln -sf "$DOTFILES/home/.gitconfig" "$HOME/.gitconfig"
+
+# Oh My Zsh custom theme
+if [[ -d "$HOME/.oh-my-zsh/custom/themes" ]]; then
+    ln -sf "$DOTFILES/zsh/themes/inrainbows.zsh-theme" "$HOME/.oh-my-zsh/custom/themes/inrainbows.zsh-theme"
+fi
 
 echo "✓ Dotfiles linked"
 """
@@ -105,3 +122,14 @@ fi
 [tasks.upgrade]
 description = "Upgrade all tools to latest versions"
 run = "mise upgrade"
+
+[tasks.services]
+description = "Start macOS services (sketchybar, borders)"
+run = """
+#!/bin/bash
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    brew services start sketchybar 2>/dev/null || true
+    brew services start borders 2>/dev/null || true
+    echo "✓ Services started"
+fi
+"""
