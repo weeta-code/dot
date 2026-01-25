@@ -110,32 +110,29 @@ run = "mise install node python go ripgrep fd fzf neovim tmux"
 
 [tasks.update]
 description = "Pull latest dotfiles and sync everything"
+depends = ["omz", "link"]
 run = """
 #!/bin/bash
 set -e
 
-echo "Updating dotfiles..."
+echo "Pulling latest dotfiles..."
 cd ~/.config
 git pull
 
-echo "Updating Homebrew packages..."
+echo "Syncing Homebrew packages..."
 if [[ "$OSTYPE" == "darwin"* ]] && command -v brew &>/dev/null; then
     brew update
     brew bundle --file="$HOME/.config/Brewfile"
 fi
 
 echo "Updating Oh My Zsh..."
-if [[ -d "$HOME/.oh-my-zsh" ]]; then
-    cd "$HOME/.oh-my-zsh" && git pull --rebase --quiet
-fi
+cd "$HOME/.oh-my-zsh" && git pull --rebase --quiet
 
 echo "Updating Powerlevel10k..."
 P10K_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
-if [[ -d "$P10K_DIR" ]]; then
-    cd "$P10K_DIR" && git pull --rebase --quiet
-fi
+cd "$P10K_DIR" && git pull --rebase --quiet
 
-echo "Updating mise tools..."
+echo "Syncing mise tools..."
 mise install
 
 echo "✓ Everything updated"
@@ -171,6 +168,7 @@ echo "✓ Everything upgraded"
 
 [tasks.services]
 description = "Start/restart macOS services (sketchybar, borders, aerospace)"
+depends = ["brew"]
 run = """
 #!/bin/bash
 if [[ "$OSTYPE" != "darwin"* ]]; then
