@@ -94,6 +94,9 @@ if [[ -d "$HOME/.oh-my-zsh/custom/themes" ]]; then
     ln -sf "$DOTFILES/zsh/themes/inrainbows.zsh-theme" "$HOME/.oh-my-zsh/custom/themes/inrainbows.zsh-theme"
 fi
 
+# Powerlevel10k config
+ln -sf "$DOTFILES/zsh/p10k.zsh" "$HOME/.p10k.zsh"
+
 echo "✓ Dotfiles linked"
 """
 
