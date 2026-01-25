@@ -1,6 +1,11 @@
+# Powerlevel10k instant prompt (keep at top)
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
 # Oh My Zsh
 export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="inrainbows"
+ZSH_THEME="powerlevel10k/powerlevel10k"
 plugins=(git)
 source $ZSH/oh-my-zsh.sh
 
@@ -22,3 +27,6 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 
 # neofetch on interactive shells
 [[ -o interactive ]] && neofetch
+
+# Powerlevel10k config (run `p10k configure` to customize)
+[[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
