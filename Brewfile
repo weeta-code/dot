@@ -1,27 +1,28 @@
 # Dotfiles Brewfile - macOS system dependencies
 # Run: brew bundle --file=~/.config/Brewfile
 
-# C/C++ toolchain (clang, clangd come from Xcode CLI tools)
-# GDB for debugging (nvim-dap uses this)
-brew "gdb"
+# Taps (must come first)
+tap "nikitabobko/tap"
+tap "FelixKratz/formulae"
 
 # Build tools
+brew "gdb"
 brew "cmake"
 brew "make"
+brew "llvm"
 
-# Optional but useful
-brew "llvm"        # Latest clang/clangd if Xcode version is old
-brew "tree"        # Directory listing (not in mise)
-brew "wget"        # HTTP downloads
-brew "zoxide"      # Smart cd (referenced in .zshrc)
-brew "stow"        # Symlink farm manager (if needed)
+# CLI tools
+brew "tree"
+brew "wget"
+brew "zoxide"
+brew "stow"
 brew "sesh"
-cask "font-hack-nerd-font"
 
-# Casks (macOS apps)
-tap "nikitabobko/tap"
-cask "aerospace"
-cask "ghostty"
-tap "FelixKratz/formulae"
+# Window management
 brew "borders"
 brew "sketchybar"
+
+# Casks (macOS apps)
+cask "font-hack-nerd-font"
+cask "aerospace"
+cask "ghostty"
