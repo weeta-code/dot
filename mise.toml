@@ -5,6 +5,7 @@
 EDITOR = "nvim"
 DOTFILES = "~/.config"
 
+
 [tools]
 # Languages - all latest stable (invariants: go, python, c/c++, lua)
 node = "latest"
@@ -22,6 +23,7 @@ neovim = "latest"
 tmux = "latest"
 ffmpeg = "latest"
 jq = "latest"
+"cargo:starship" = "latest"
 
 # LSP servers (mise-installable)
 "npm:typescript-language-server" = "latest"
@@ -33,6 +35,7 @@ lua-language-server = "latest"
 description = "Full dotfiles setup for workstations (macOS/Linux desktop)"
 depends = ["xcode", "omz", "link", "tools", "brew", "services"]
 run = "echo '✓ Dotfiles setup complete!'"
+
 
 [tasks.omz]
 description = "Install Oh My Zsh and Powerlevel10k"
@@ -167,7 +170,7 @@ echo "✓ Everything upgraded"
 """
 
 [tasks.services]
-description = "Start/restart macOS services (sketchybar, borders, aerospace)"
+description = "Start/restart macOS services (sketchybar, aerospace)"
 depends = ["brew"]
 run = """
 #!/bin/bash
@@ -181,12 +184,8 @@ echo "Starting services..."
 # Sketchybar
 brew services restart sketchybar 2>/dev/null || brew services start sketchybar 2>/dev/null || true
 
-# Borders
-brew services restart borders 2>/dev/null || brew services start borders 2>/dev/null || true
-
 # Aerospace (if installed)
 if command -v aerospace &>/dev/null; then
-    # Aerospace doesn't use brew services, just needs to be running
     pgrep -x "AeroSpace" >/dev/null || open -a "AeroSpace" 2>/dev/null || true
 fi
 
