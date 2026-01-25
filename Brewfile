@@ -1,9 +1,9 @@
 # Dotfiles Brewfile - macOS system dependencies
 # Run: brew bundle --file=~/.config/Brewfile
 
-# Taps (must come first)
+# Taps (must come first, lowercase!)
 tap "nikitabobko/tap"
-tap "FelixKratz/formulae"
+tap "felixkratz/formulae"
 
 # Build tools
 brew "gdb"
@@ -19,10 +19,8 @@ brew "stow"
 brew "sesh"
 
 # Window management
-brew "borders"
-brew "sketchybar"
+brew "felixkratz/formulae/sketchybar"
 
 # Casks (macOS apps)
 cask "font-hack-nerd-font"
 cask "aerospace"
-cask "ghostty"

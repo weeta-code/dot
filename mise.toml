@@ -167,7 +167,7 @@ echo "✓ Everything upgraded"
 """
 
 [tasks.services]
-description = "Start/restart macOS services (sketchybar, borders, aerospace)"
+description = "Start/restart macOS services (sketchybar, aerospace)"
 depends = ["brew"]
 run = """
 #!/bin/bash
@@ -181,12 +181,8 @@ echo "Starting services..."
 # Sketchybar
 brew services restart sketchybar 2>/dev/null || brew services start sketchybar 2>/dev/null || true
 
-# Borders
-brew services restart borders 2>/dev/null || brew services start borders 2>/dev/null || true
-
 # Aerospace (if installed)
 if command -v aerospace &>/dev/null; then
-    # Aerospace doesn't use brew services, just needs to be running
     pgrep -x "AeroSpace" >/dev/null || open -a "AeroSpace" 2>/dev/null || true
 fi
 
