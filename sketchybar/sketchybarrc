@@ -60,7 +60,7 @@ sketchybar --add item music left                                   \
                             label.padding_right=12                 \
                             background.padding_left=18             \
                             script="$PLUGIN_DIR/music.sh"          \
-                            update_freq=2                          \
+                            update_freq=1                          \
            --subscribe music system_woke
 
 sketchybar --default                                                \
