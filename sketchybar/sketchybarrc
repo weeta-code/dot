@@ -43,37 +43,25 @@ sketchybar --add bracket spaces '/space\..*/'                      \
                                 blur_radius=2                      \
                                 background.height=30
 
-# MPD Now Playing widget
-sketchybar --add item music.info left                              \
-           --set      music.info icon=                            \
-                                 icon.color=$COLOR                 \
-                                 label=""                          \
-                                 drawing=off                       \
-                                 background.color=0xEB1e1e2e       \
-                                 background.border_width=1         \
-                                 background.border_color=$COLOR    \
-                                 background.height=30              \
-                                 blur_radius=2                     \
-                                 icon.padding_left=12              \
-                                 icon.padding_right=4              \
-                                 label.padding_left=4              \
-                                 label.padding_right=8             \
-                                 background.padding_left=18        \
-                                 script="$PLUGIN_DIR/music.sh"     \
-                                 update_freq=2                     \
-           --subscribe music.info system_woke
-
-sketchybar --add item music.time left                              \
-           --set      music.time label=""                          \
-                                 drawing=off                       \
-                                 icon.drawing=off                  \
-                                 background.color=0xEB1e1e2e       \
-                                 background.border_width=1         \
-                                 background.border_color=$COLOR    \
-                                 background.height=30              \
-                                 blur_radius=2                     \
-                                 label.padding_left=8              \
-                                 label.padding_right=12
+# MPD Now Playing widget (single box)
+sketchybar --add item music left                                   \
+           --set      music icon="󰎆"                               \
+                            icon.color=$COLOR                      \
+                            label=""                               \
+                            drawing=off                            \
+                            background.color=0xEB1e1e2e            \
+                            background.border_width=1              \
+                            background.border_color=$COLOR         \
+                            background.height=30                   \
+                            blur_radius=2                          \
+                            icon.padding_left=12                   \
+                            icon.padding_right=6                   \
+                            label.padding_left=0                   \
+                            label.padding_right=12                 \
+                            background.padding_left=18             \
+                            script="$PLUGIN_DIR/music.sh"          \
+                            update_freq=2                          \
+           --subscribe music system_woke
 
 sketchybar --default                                                \
                      background.color=0xEB1e1e2e                    \

@@ -5,8 +5,7 @@ STATUS=$(mpc status 2>/dev/null)
 
 if [[ -z "$STATUS" ]] || ! echo "$STATUS" | grep -q "\[playing\]\|\[paused\]"; then
     # Nothing playing - hide widget
-    sketchybar --set music.info drawing=off \
-               --set music.time drawing=off
+    sketchybar --set music drawing=off
     exit 0
 fi
 
@@ -27,9 +26,10 @@ else
     ICON_COLOR="0xFFF25A16"  # Full orange
 fi
 
+# Combine into single label: "Track - Artist  0:46 / 3:23"
+LABEL="$TRACK  $TIME"
+
 # Update sketchybar
-sketchybar --set music.info drawing=on \
-                            label="$TRACK" \
-                            icon.color="$ICON_COLOR" \
-           --set music.time drawing=on \
-                            label="$TIME"
+sketchybar --set music drawing=on \
+                       label="$LABEL" \
+                       icon.color="$ICON_COLOR"
