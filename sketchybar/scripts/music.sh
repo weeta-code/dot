@@ -56,8 +56,8 @@ elif [[ -f "$FULL_PATH" ]]; then
     # Clean old cache files (keep last 20)
     ls -t "$ART_CACHE_DIR"/*.jpg 2>/dev/null | tail -n +21 | xargs rm -f 2>/dev/null
     
-    # Extract embedded art (works for mp3, m4a, flac)
-    ffmpeg -y -i "$FULL_PATH" -an -vcodec copy "$ART_CACHE" 2>/dev/null
+    # Extract embedded art and normalize to 500x500 (works for mp3, m4a, flac)
+    ffmpeg -y -i "$FULL_PATH" -an -vf "scale=500:500:force_original_aspect_ratio=decrease,pad=500:500:(ow-iw)/2:(oh-ih)/2" "$ART_CACHE" 2>/dev/null
     if [[ -f "$ART_CACHE" && -s "$ART_CACHE" ]]; then
         ART_EXTRACTED=true
     fi
