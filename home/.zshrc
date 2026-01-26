@@ -8,7 +8,6 @@ export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="powerlevel10k/powerlevel10k"
 plugins=(git)
 source $ZSH/oh-my-zsh.sh
-typeset -g POWERLEVEL9K_INSTANT_PROMPT=off
 
 # Environment
 export PATH="$HOME/.local/bin:$PATH"
@@ -31,3 +30,8 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 
 # Powerlevel10k config (run `p10k configure` to customize)
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+
+# aliases
+alias mpd='mpd ~/.config/mpd/mpd.conf'
+alias shuffle='mpc shuffle'
+alias reboot='pkill mpd && mpd'
