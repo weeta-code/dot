@@ -122,15 +122,20 @@
             pane: Split(
                 direction: Horizontal,
                 panes: [
-                    (size: "75%", pane: Pane(Queue)),
-                    (size: "25%",  
+                    (size: "60%", pane: Pane(Queue)),
+                    (size: "40%",  
                             pane: Split(
                                 direction: Vertical,
                                 panes: [
                                     (
-                                            size: "75%",
+                                            size: "70%",
                                             borders: "NONE",
                                             pane: Pane(AlbumArt),
+                                    ),
+                                    (
+                                            size: "30%",
+                                            borders: "NONE",
+                                            pane: Pane(Cava),
                                     ),
                                 ],
                             ),
@@ -164,4 +169,24 @@
             ),
         ),
     ],
+    cava: (
+        framerate: 60,
+        autosens: true,
+        sensitivity: 100,
+        lower_cutoff_freq: 50,
+        higher_cutoff_freq: 10000,
+        input: (
+            method: Fifo,
+            source: "/tmp/mpd.fifo",
+            sample_rate: 44100,
+            channels: 2,
+            sample_bits: 16,
+        ),
+        smoothing: (
+            noise_reduction: 77,
+            monstercat: false,
+            waves: false,
+        ),
+        eq: [],
+    ),
 )

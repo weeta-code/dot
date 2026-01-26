@@ -21,6 +21,10 @@ brew "yazi"
 
 # Music
 brew "mpd"
+brew "cava"
+
+# System info
+brew "neofetch"
 
 # Window management
 brew "felixkratz/formulae/sketchybar"

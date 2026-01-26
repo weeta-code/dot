@@ -24,6 +24,7 @@ tmux = "latest"
 ffmpeg = "latest"
 jq = "latest"
 "cargo:starship" = "latest"
+"cargo:rmpc" = "latest"
 
 # LSP servers (mise-installable)
 "npm:typescript-language-server" = "latest"
