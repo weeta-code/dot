@@ -1,0 +1,54 @@
+# Beets configuration
+# Docs: https://beets.readthedocs.io/
+
+directory: ~/Music/Stash
+library: ~/.local/share/beets/library.db
+
+# Don't move/copy files, just tag in place
+import:
+  move: no
+  copy: no
+  write: yes
+  autotag: yes
+  timid: no
+  quiet_fallback: skip
+  singletons: yes
+
+# Plugins for metadata + album art
+plugins: fetchart embedart lastgenre scrub fromfilename
+
+# Album art settings
+fetchart:
+  auto: yes
+  minwidth: 500
+  maxwidth: 1200
+  sources:
+    - coverart
+    - itunes
+    - amazon
+    - albumart
+    - wikipedia
+
+# Embed art directly into files
+embedart:
+  auto: yes
+  remove_art_file: yes
+
+# Auto-detect genre from last.fm
+lastgenre:
+  auto: yes
+  count: 1
+
+# Clean up messy tags before writing
+scrub:
+  auto: yes
+
+# Matching settings (relaxed for YouTube/SoundCloud downloads)
+match:
+  strong_rec_thresh: 0.10
+  medium_rec_thresh: 0.25
+  required: []
+  ignored: []
+  preferred:
+    countries: ['US', 'GB', 'XW']
+    media: ['Digital Media|File', 'CD']

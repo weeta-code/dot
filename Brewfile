@@ -22,6 +22,7 @@ brew "yazi"
 # Music
 brew "mpd"
 brew "cava"
+# beets installed via: pip install beets requests pillow pylast
 
 # System info
 brew "neofetch"
