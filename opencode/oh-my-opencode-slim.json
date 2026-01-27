@@ -41,7 +41,7 @@
     }
   },
   "tmux": {
-    "enabled": false
+    "enabled": true
   },
   "disabled_mcps": []
 }
