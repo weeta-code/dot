@@ -43,6 +43,28 @@ sketchybar --add bracket spaces '/space\..*/'                      \
                                 blur_radius=2                      \
                                 background.height=30
 
+# MPD Now Playing widget with album art
+sketchybar --add item music left                                   \
+           --set      music icon="󰎆"                               \
+                            icon.color=$COLOR                      \
+                            icon.background.drawing=off            \
+                            icon.background.image.scale=0.034      \
+                            label="Not Playing"                    \
+                            drawing=on                             \
+                            background.color=0xEB1e1e2e            \
+                            background.border_width=1              \
+                            background.border_color=$COLOR         \
+                            background.height=30                   \
+                            blur_radius=2                          \
+                            icon.padding_left=14                   \
+                            icon.padding_right=10                  \
+                            label.padding_left=0                   \
+                            label.padding_right=12                 \
+                            background.padding_left=18             \
+                            script="$PLUGIN_DIR/music.sh"          \
+                            update_freq=1                          \
+           --subscribe music system_woke
+
 sketchybar --default                                                \
                      background.color=0xEB1e1e2e                    \
                      blur_radius=2                                  \

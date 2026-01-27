@@ -5,6 +5,7 @@
 EDITOR = "nvim"
 DOTFILES = "~/.config"
 
+
 [tools]
 # Languages - all latest stable (invariants: go, python, c/c++, lua)
 node = "latest"
@@ -22,6 +23,8 @@ neovim = "latest"
 tmux = "latest"
 ffmpeg = "latest"
 jq = "latest"
+"cargo:starship" = "latest"
+"cargo:rmpc" = "latest"
 
 # LSP servers (mise-installable)
 "npm:typescript-language-server" = "latest"
@@ -33,6 +36,7 @@ lua-language-server = "latest"
 description = "Full dotfiles setup for workstations (macOS/Linux desktop)"
 depends = ["xcode", "omz", "link", "tools", "brew", "services"]
 run = "echo '✓ Dotfiles setup complete!'"
+
 
 [tasks.omz]
 description = "Install Oh My Zsh and Powerlevel10k"
