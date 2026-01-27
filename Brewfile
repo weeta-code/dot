@@ -21,6 +21,7 @@ brew "yazi"
 
 # Music
 brew "mpd"
+brew "mpc"
 brew "cava"
 # beets installed via: pip install beets requests pillow pylast
 
