@@ -1,6 +1,7 @@
 # Ghostty configuration
 # https://ghostty.org/docs/config
 
+keybind = global:ctrl+shift+t=toggle_quick_terminal
 font-family = Monaco
 
 background = #000000

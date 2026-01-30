@@ -13,6 +13,11 @@ source $ZSH/oh-my-zsh.sh
 export PATH="$HOME/.local/bin:$PATH"
 export EDITOR="nvim"
 
+# script
+define() {
+  curl -S "dict://dict.org/d:$1"
+}
+
 # Tools
 eval "$(zoxide init zsh)"
 eval "$($HOME/.local/bin/mise activate zsh)"
@@ -34,4 +39,8 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 # aliases
 alias mpd='mpd ~/.config/mpd/mpd.conf'
 alias shuffle='mpc shuffle'
+alias update='mpc update'
 alias reboot='pkill mpd && mpd'
+
+# embedder
+export PATH="/Users/mira/.embedder/bin:$PATH"
