@@ -16,6 +16,7 @@ vim.api.nvim_create_autocmd("BufEnter", {
   command = "startinsert",
 })
 
+
 local opt = vim.opt
 -- opt.relativenumber = true
 opt.number = true
@@ -114,6 +115,10 @@ local plugins = {
   "sindrets/diffview.nvim",
   "NickvanDyke/opencode.nvim",
   "sphamba/smear-cursor.nvim",
+  "nosduco/remote-sshfs.nvim",
+  "ThePrimeagen/99",
+  "tpop/vim-surround",
+
 
   -- Colorscheme
   "catriverr/inrainbows.vim",
@@ -426,6 +431,43 @@ require("oil").setup({
   },
 })
 
+-- 99
+-- local _99 = require("99")
+--   local cwd = vim.uv.cwd()
+--   local basename = vim.fs.basename(cwd)
+--
+-- _99.setup({
+--   logger = {
+--     level = _99.DEBUG,
+--     path = "/tmp/" .. basename .. ".99.debug",
+--     print_on_error = true,
+--   },
+--
+--   completion = {
+--     custom_rules = {
+--       "scratch/custom_rules/",
+--     },
+--
+--     source = "cmp",
+--   },
+--
+--   md_files = {
+--     "AGENT.md",
+--   }
+-- })
+--
+--
+-- vim.keymap.set("n", "<leader>9f", function()
+--   _99.fill_in_function()
+-- end)
+-- vim.keymap.set("v", "<leader>9v", function()
+--   _99.visual()
+-- end)
+-- vim.keymap.set("v", "<leader>9s", function()
+--   _99.stop_all_requests()
+-- end)
+
+-- write comments out that entirely explains what use case exists for this plugin and how I can use it with the rest of my navigation plugins to increase productivity
 -- Aerial (code outline/symbol navigation)
 require("aerial").setup({
   backends = { "lsp", "treesitter", "markdown", "man" },
@@ -582,6 +624,31 @@ vim.keymap.set("n", "<leader>hn", function() harpoon:list():next() end)
 map("n", "<leader>ee", "<cmd>Oil --float<CR>", { desc = "Open Oil (floating)" })
 map("n", "<leader>ef", "<cmd>Oil<CR>", { desc = "Open Oil (full screen)" })
 
+-- SSHFS
+local api = require('remote-sshfs.api')
+
+vim.keymap.set('n', '<leader>rc', api.connect, {})
+vim.keymap.set('n', '<leader>rd', api.disconnect, {})
+vim.keymap.set('n', '<leader>re', api.edit, {})
+
+-- (optional) Override telescope find_files and live_grep to make dynamic based on if connected to host
+local builtin = require("telescope.builtin")
+local connections = require("remote-sshfs.connections")
+vim.keymap.set("n", "<leader>ff", function()
+ if connections.is_connected() then
+  api.find_files()
+ else
+  builtin.find_files()
+ end
+end, {})
+vim.keymap.set("n", "<leader>fg", function()
+ if connections.is_connected() then
+  api.live_grep()
+ else
+  builtin.live_grep()
+ end
+end, {})
+
 -- Telescope
 local telescope = require("telescope")
 local actions = require("telescope.actions")
@@ -597,6 +664,7 @@ telescope.setup({
     },
   },
 })
+telescope.load_extension 'remote-sshfs'
 pcall(telescope.load_extension, "fzf")
 map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", { desc = "Find files" })
 map("n", "<leader>fr", "<cmd>Telescope oldfiles<cr>", { desc = "Recent files" })
