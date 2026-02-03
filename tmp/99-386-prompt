@@ -1,3 +1,13 @@
+You receive a selection in neovim that you need to replace with new code.
+The selection's contents may contain notes, incorporate the notes every time if there are some.
+consider the context of the selection and what you are suppose to be implementing
+<SELECTION_LOCATION>
+range(point(466,1),point(466,1))
+</SELECTION_LOCATION>
+<SELECTION_CONTENT>
+v
+</SELECTION_CONTENT>
+<FILE_CONTAINING_SELECTION>
 vim.loader.enable()
 
 -- Leader and basics
@@ -15,7 +25,6 @@ vim.api.nvim_create_autocmd("BufEnter", {
   pattern = "term://*",
   command = "startinsert",
 })
-
 
 local opt = vim.opt
 -- opt.relativenumber = true
@@ -111,12 +120,13 @@ local plugins = {
   "rcarriga/nvim-dap-ui",
   "nvim-neotest/nvim-nio",
   "stevearc/oil.nvim",
+  "stevearc/aerial.nvim",
   "sindrets/diffview.nvim",
   "NickvanDyke/opencode.nvim",
   "sphamba/smear-cursor.nvim",
   "nosduco/remote-sshfs.nvim",
   "ThePrimeagen/99",
-  "tpope/vim-surround",
+  "tpop/vim-surround",
 
 
   -- Colorscheme
@@ -431,9 +441,85 @@ require("oil").setup({
 })
 
 -- 99
--- 99 plugin disabled - opencode permission prompts block nvim
--- require("99").setup({})
+local _99 = require("99")
+  local cwd = vim.uv.cwd()
+  local basename = vim.fs.basename(cwd)
 
+_99.setup({
+  logger = {
+    level = _99.DEBUG,
+    path = "/tmp/" .. basename .. ".99.debug",
+    print_on_error = true,
+  },
+
+  completion = {
+    custom_rules = {
+      "scratch/custom_rules/",
+    },
+
+    source = "cmp",
+  },
+
+  md_files = {
+    "AGENT.md",
+  }
+})
+
+
+-- explain these keymaps to me please
+vim.keymap.set("n", "<leader>9f", function()
+  _99.fill_in_function()
+end)
+vim.keymap.set("v", "<leader>9v", function()
+  _99.visual()
+end)
+vim.keymap.set("v", "<leader>9s", function()
+  _99.stop_all_requests()
+end)
+
+-- Aerial (code outline/symbol navigation)
+require("aerial").setup({
+  backends = { "lsp", "treesitter", "markdown", "man" },
+  layout = {
+    max_width = { 40, 0.2 },
+    min_width = 20,
+    default_direction = "prefer_right",
+  },
+  attach_mode = "global",
+  close_on_select = false,
+  show_guides = true,
+  filter_kind = false,
+  keymaps = {
+    ["?"] = "actions.show_help",
+    ["g?"] = "actions.show_help",
+    ["<CR>"] = "actions.jump",
+    ["<C-v>"] = "actions.jump_vsplit",
+    ["<C-s>"] = "actions.jump_split",
+    ["<C-p>"] = "actions.scroll",
+    ["<C-j>"] = "actions.down_and_scroll",
+    ["<C-k>"] = "actions.up_and_scroll",
+    ["{"] = "actions.prev",
+    ["}"] = "actions.next",
+    ["[["] = "actions.prev_up",
+    ["]]"] = "actions.next_up",
+    ["q"] = "actions.close",
+    ["o"] = "actions.tree_toggle",
+    ["O"] = "actions.tree_toggle_recursive",
+    ["l"] = "actions.tree_open",
+    ["h"] = "actions.tree_close",
+    ["zR"] = "actions.tree_open_all",
+    ["zM"] = "actions.tree_close_all",
+  },
+})
+-- Aerial keymaps (leader-based)
+map("n", "<leader>aa", "<cmd>AerialToggle!<CR>", { desc = "Toggle aerial" })
+map("n", "<leader>af", "<cmd>AerialToggle float<CR>", { desc = "Aerial float" })
+map("n", "<leader>an", "<cmd>AerialNavToggle<CR>", { desc = "Aerial nav" })
+-- Symbol navigation (bracket-style like [d ]d for diagnostics)
+map("n", "[s", "<cmd>AerialPrev<CR>", { desc = "Prev symbol" })
+map("n", "]s", "<cmd>AerialNext<CR>", { desc = "Next symbol" })
+map("n", "[[", "<cmd>AerialPrevUp<CR>", { desc = "Prev symbol (up)" })
+map("n", "]]", "<cmd>AerialNextUp<CR>", { desc = "Next symbol (up)" })
 
 -- Floaterminal
 local floaterm = { buf = nil, win = nil }
@@ -593,7 +679,6 @@ map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", { desc = "Find files" })
 map("n", "<leader>fr", "<cmd>Telescope oldfiles<cr>", { desc = "Recent files" })
 map("n", "<leader>fs", "<cmd>Telescope live_grep<cr>", { desc = "Live grep" })
 map("n", "<leader>fc", "<cmd>Telescope grep_string<cr>", { desc = "Grep word" })
-map("n", "<leader>ft", "<cmd>Telescope lsp_document_symbols<cr>", { desc = "Find symbols (tags)" })
 
 -- Treesitter: Neovim 0.11+ has built-in support
 -- Bundled parsers: c, lua, markdown, markdown_inline, query, vim, vimdoc
@@ -820,3 +905,13 @@ vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
     vim.cmd("silent! update")
   end,
 })
+</FILE_CONTAINING_SELECTION>
+
+<MustObey>
+NEVER alter any file other than TEMP_FILE.
+never provide the requested changes as conversational output. Return only the code.
+ONLY provide requested changes by writing the change to TEMP_FILE
+
+never attempt to read TEMP_FILE.  It is purely for output.  Previous contents, which may not exist, can be written over without worry
+</MustObey>
+<TEMP_FILE>/Users/mira/.config/tmp/99-386</TEMP_FILE>
