@@ -24,6 +24,10 @@
         global: {
             "u":       Update, // update music database
             "U":       Rescan,
+            "e":       ExternalCommand(
+                command: ["bash", "-c", "mpc insert \"$SELECTED_SONGS\""],
+                prompt: false,       
+            ),
             ":":       CommandMode,
             ".":       VolumeUp,
             ",":       VolumeDown,

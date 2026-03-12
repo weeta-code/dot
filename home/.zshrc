@@ -31,7 +31,7 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 [ -s "$BUN_INSTALL/_bun" ] && source "$BUN_INSTALL/_bun"
 
 # neofetch on interactive shells
-[[ -o interactive ]] && neofetch
+[[ -o interactive ]] && sleep 0.1 && neofetch
 
 # Powerlevel10k config (run `p10k configure` to customize)
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
@@ -44,3 +44,9 @@ alias reboot='pkill mpd && mpd'
 
 # embedder
 export PATH="/Users/mira/.embedder/bin:$PATH"
+export PATH="/Library/TeX/texbin:$PATH"
+
+# bun completions
+[ -s "/Users/vd/.bun/_bun" ] && source "/Users/vd/.bun/_bun"
+
+

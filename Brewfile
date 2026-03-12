@@ -34,3 +34,6 @@ brew "felixkratz/formulae/sketchybar"
 # Casks (macOS apps)
 cask "font-hack-nerd-font"
 cask "aerospace"
+cask "ghostty"
+cask "raycast"
+cask "zed"

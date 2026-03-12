@@ -35,6 +35,7 @@ opt.clipboard:append("unnamedplus")
 opt.splitright = true
 opt.splitbelow = true
 opt.termguicolors = true
+opt.conceallevel = 2 -- For obsidian.nvim and markdown rendering
 -- vim.g.have_nerd_font = true
 
 -- Keymaps
@@ -56,16 +57,25 @@ map("t", "<C-j>", "<C-\\><C-n><cmd>wincmd j<CR>", { silent = true, desc = "Windo
 map("t", "<C-k>", "<C-\\><C-n><cmd>wincmd k<CR>", { silent = true, desc = "Window up" })
 map("t", "<C-l>", "<C-\\><C-n><cmd>wincmd l<CR>", { silent = true, desc = "Window right" })
 
+vim.g.tex_flavor = "latex"
+vim.filetype.add({ extension = { tex = "tex" } })
 
 -- Native package manager bootstrap
 local pack_root = vim.fn.stdpath("data") .. "/site/pack/plugins/start"
 vim.fn.mkdir(pack_root, "p")
 
-local function ensure(repo, build)
+local function ensure(repo, build, branch)
   local name = repo:match("[^/]+$")
   local path = pack_root .. "/" .. name
   if not vim.loop.fs_stat(path) then
-    vim.system({ "git", "clone", "--depth=1", "https://github.com/" .. repo .. ".git", path }):wait()
+    local cmd = { "git", "clone", "--depth=1" }
+    if branch then
+      table.insert(cmd, "-b")
+      table.insert(cmd, branch)
+    end
+    table.insert(cmd, "https://github.com/" .. repo .. ".git")
+    table.insert(cmd, path)
+    vim.system(cmd):wait()
     if build then
       build(path)
     end
@@ -90,9 +100,9 @@ local plugins = {
   "akinsho/bufferline.nvim",
   "lukas-reineke/indent-blankline.nvim",
   "lewis6991/gitsigns.nvim",
-  "folke/trouble.nvim",
+
   "folke/which-key.nvim",
-  "goolord/alpha-nvim",
+  "folke/snacks.nvim",
   "rmagatti/auto-session",
   "stevearc/dressing.nvim",
   "szw/vim-maximizer",
@@ -106,18 +116,20 @@ local plugins = {
   "ThePrimeagen/harpoon",
   "folke/flash.nvim",
   "pechorin/any-jump.vim",
-  "stevearc/quicker.nvim",
-  "mfussenegger/nvim-dap",
-  "rcarriga/nvim-dap-ui",
-  "nvim-neotest/nvim-nio",
+
+
   "stevearc/oil.nvim",
   "sindrets/diffview.nvim",
   "NickvanDyke/opencode.nvim",
   "sphamba/smear-cursor.nvim",
-  "nosduco/remote-sshfs.nvim",
-  "ThePrimeagen/99",
+
   "tpope/vim-surround",
 
+  "epwalsh/obsidian.nvim",
+
+  -- Org-mode + Google Calendar
+  "nvim-orgmode/orgmode",
+  "eprislac/org-gcal-sync",
 
   -- Colorscheme
   "catriverr/inrainbows.vim",
@@ -126,6 +138,8 @@ local plugins = {
 for _, repo in ipairs(plugins) do
   if repo == "nvim-telescope/telescope-fzf-native.nvim" then
     ensure(repo, run_make)
+  elseif repo == "ThePrimeagen/harpoon" then
+    ensure(repo, nil, "harpoon2")
   else
     ensure(repo)
   end
@@ -143,6 +157,20 @@ vim.api.nvim_set_hl(0, "LspReferenceWrite", { fg = "#FF0000" })
 vim.api.nvim_set_hl(0, "LspReferenceText", { fg = "#FF0000" })
 vim.api.nvim_set_hl(0, "Search", { bg = "#9aa0a6", fg = "#FFFFFF" })
 vim.api.nvim_set_hl(0, "GitSignsCurrentLineBlame", { fg = "#7a7a7a" })
+
+-- Rainbow highlights for dashboard (inrainbows palette)
+vim.api.nvim_set_hl(0, "RainbowCyan", { fg = "#a4dde6" })
+vim.api.nvim_set_hl(0, "RainbowBlue", { fg = "#4686c6" })
+vim.api.nvim_set_hl(0, "RainbowRed", { fg = "#ec2427" })
+vim.api.nvim_set_hl(0, "RainbowGreen", { fg = "#45b64a" })
+vim.api.nvim_set_hl(0, "RainbowOrange", { fg = "#f36525" })
+vim.api.nvim_set_hl(0, "RainbowYellow", { fg = "#edb41f" })
+vim.api.nvim_set_hl(0, "RainbowBrightYellow", { fg = "#F7EE49" })
+vim.api.nvim_set_hl(0, "RainbowPurple", { fg = "#9b59b6" })
+
+-- Todo highlights for dashboard
+vim.api.nvim_set_hl(0, "TodoCompleted", { fg = "#666666", strikethrough = true })
+vim.api.nvim_set_hl(0, "TodoPending", { fg = "#ffffff" })
 
 -- UI plugins
 require("nvim-web-devicons").setup({ default = true })
@@ -209,62 +237,9 @@ map("n", "<leader>gl", "<cmd>Git pull<CR>", { desc = "Git pull" })
 map("n", "<leader>gL", "<cmd>Git log --oneline<CR>", { desc = "Git log" })
 map("n", "<leader>sm", "<cmd>MaximizerToggle<CR>", { desc = "Toggle maximizer" })
 
--- DAP
-local dap = require("dap")
-local dapui = require("dapui")
-dapui.setup()
-dap.listeners.after.event_initialized["dapui_config"] = function() dapui.open() end
-dap.listeners.before.event_terminated["dapui_config"] = function() dapui.close() end
-dap.listeners.before.event_exited["dapui_config"] = function() dapui.close() end
-map("n", "<leader>du", function() dapui.toggle() end, { desc = "Toggle DAP UI" })
-map("n", "<leader>db", function() dap.toggle_breakpoint() end, { desc = "Toggle breakpoint" })
-map("n", "<leader>dc", function() dap.continue() end, { desc = "Continue" })
-map("n", "<leader>di", function() dap.step_into() end, { desc = "Step into" })
-map("n", "<leader>do", function() dap.step_over() end, { desc = "Step over" })
-map("n", "<leader>dO", function() dap.step_out() end, { desc = "Step out" })
-map("n", "<leader>dr", function() dap.repl.open() end, { desc = "Open REPL" })
-map("n", "<leader>dl", function() dap.run_last() end, { desc = "Run last" })
-dap.adapters.gdb = {
-  type = "executable",
-  command = "gdb",
-  args = { "--interpreter=dap", "--eval-command", "set print pretty on" }
-}
-dap.configurations.c = {
-  {
-    name = "Launch",
-    type = "gdb",
-    request = "launch",
-    program = function()
-      return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
-    end,
-    args = {}, -- provide arguments if needed
-    cwd = "${workspaceFolder}",
-    stopAtBeginningOfMainSubprogram = false,
-  },
-  {
-    name = "Select and attach to process",
-    type = "gdb",
-    request = "attach",
-    program = function()
-      return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
-    end,
-    pid = function()
-      local name = vim.fn.input('Executable name (filter): ')
-      return require("dap.utils").pick_process({ filter = name })
-    end,
-    cwd = '${workspaceFolder}'
-  },
-  {
-    name = 'Attach to gdbserver :1234',
-    type = 'gdb',
-    request = 'attach',
-    target = 'localhost:1234',
-    program = function()
-      return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
-    end,
-    cwd = '${workspaceFolder}'
-  }
-}
+
+
+vim.keymap.set("n", "-", function() require("oil").open() end, { desc = "Open Oil" })
 
 -- Oil
 require("oil").setup({
@@ -430,9 +405,7 @@ require("oil").setup({
   },
 })
 
--- 99
--- 99 plugin disabled - opencode permission prompts block nvim
--- require("99").setup({})
+
 
 
 -- Floaterminal
@@ -490,6 +463,14 @@ map("n", "<leader>oa", function() require('opencode').ask() end, { desc = "openc
 map("n", "<leader>os", function() require('opencode').select() end, { desc = "opencode select"})
 map("n", "<leader>oo", function() require('opencode').operator() end, { desc = "opencode operator"})
 
+-- Obsidian keymaps
+map("n", "<leader>On", "<cmd>ObsidianNew<CR>", { desc = "New note" })
+map("n", "<leader>Oq", "<cmd>ObsidianQuickSwitch<CR>", { desc = "Quick switch" })
+map("n", "<leader>Of", "<cmd>ObsidianSearch<CR>", { desc = "Search notes" })
+map("n", "<leader>Ob", "<cmd>ObsidianBacklinks<CR>", { desc = "Backlinks" })
+map("n", "<leader>Ol", "<cmd>ObsidianLinks<CR>", { desc = "Links in note" })
+map("n", "<leader>Ot", "<cmd>ObsidianTags<CR>", { desc = "Tags" })
+
 -- Harpoon
 local harpoon = require("harpoon")
 harpoon:setup({})
@@ -501,35 +482,7 @@ vim.keymap.set("n", "<leader>h2", function() harpoon:list():select(2) end)
 vim.keymap.set("n", "<leader>h3", function() harpoon:list():select(3) end)
 vim.keymap.set("n", "<leader>h4", function() harpoon:list():select(4) end)
 
--- Quicker
-require("quicker").setup({
-  keys = {
-    {
-      ">",
-      function()
-        require("quicker").expand({ before = 2, after = 2, add_to_existing = true })
-      end,
-      desc = "Expand quickfix context",
-    },
-    {
-      "<",
-      function()
-        require("quicker").collapse()
-      end,
-      desc = "Collapse quickfix context",
-    },
-  },
-})
-vim.keymap.set("n", "<leader>q", function()
-  require("quicker").toggle()
-end, {
-  desc = "Toggle quickfix",
-})
-vim.keymap.set("n", "<leader>l", function()
-  require("quicker").toggle({ loclist = true })
-end, {
-  desc = "Toggle loclist",
-})
+
 
 -- Flash
 local flash = require("flash")
@@ -547,22 +500,10 @@ vim.keymap.set("n", "<leader>hn", function() harpoon:list():next() end)
 map("n", "<leader>ee", "<cmd>Oil --float<CR>", { desc = "Open Oil (floating)" })
 map("n", "<leader>ef", "<cmd>Oil<CR>", { desc = "Open Oil (full screen)" })
 
--- SSHFS
-local api = require('remote-sshfs.api')
-
-vim.keymap.set('n', '<leader>rc', api.connect, {})
-vim.keymap.set('n', '<leader>rd', api.disconnect, {})
-vim.keymap.set('n', '<leader>re', api.edit, {})
-
 -- (optional) Override telescope find_files and live_grep to make dynamic based on if connected to host
 local builtin = require("telescope.builtin")
-local connections = require("remote-sshfs.connections")
 vim.keymap.set("n", "<leader>ff", function()
- if connections.is_connected() then
-  api.find_files()
- else
   builtin.find_files()
- end
 end, {})
 vim.keymap.set("n", "<leader>fg", function()
  if connections.is_connected() then
@@ -571,6 +512,49 @@ vim.keymap.set("n", "<leader>fg", function()
   builtin.live_grep()
  end
 end, {})
+
+
+
+-- Obsidian
+require("obsidian").setup({
+  workspaces = {
+    { name = "accelerator", path = "~/Documents/accelerator" },
+  },
+  completion = {
+    nvim_cmp = true,
+  },
+  mappings = {
+    ["gf"] = {
+      action = function()
+        return require("obsidian").util.gf_passthrough()
+      end,
+      opts = { noremap = false, expr = true, buffer = true },
+    },
+  },
+})
+
+-- Org-mode
+require("orgmode").setup({
+  org_agenda_files = { "~/org/**/*" },
+  org_default_notes_file = "~/org/refile.org",
+})
+
+-- Org-gcal-sync (requires GCAL_ORG_SYNC_CLIENT_ID and GCAL_ORG_SYNC_CLIENT_SECRET env vars)
+-- Run :OrgGcalAuth to authenticate, then :SyncOrgGcal to sync
+require("org-gcal-sync").setup({
+  org_dirs = { "~/org" },
+  enable_backlinks = false,
+  auto_sync_on_save = true,
+  calendars = { "primary" },
+  sync_recurring_events = true,
+  conflict_resolution = "ask",
+  show_sync_status = true,
+})
+
+-- Org keymaps
+map("n", "<leader>oa", "<cmd>lua require('orgmode').action('agenda.prompt')<CR>", { desc = "Org agenda" })
+map("n", "<leader>oc", "<cmd>lua require('orgmode').action('capture.prompt')<CR>", { desc = "Org capture" })
+map("n", "<leader>oS", "<cmd>SyncOrgGcal<CR>", { desc = "Sync Google Calendar" })
 
 -- Telescope
 local telescope = require("telescope")
@@ -587,7 +571,6 @@ telescope.setup({
     },
   },
 })
-telescope.load_extension 'remote-sshfs'
 pcall(telescope.load_extension, "fzf")
 map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", { desc = "Find files" })
 map("n", "<leader>fr", "<cmd>Telescope oldfiles<cr>", { desc = "Recent files" })
@@ -616,25 +599,11 @@ if ts_ok then
     "json", "python", "tsx", "typescript", "yaml",
   }
 
-  -- Check if a parser is installed by looking for its .so file
+  -- Check if a parser is installed by looking for its shared library
   local function parser_installed(lang)
-    local paths = vim.api.nvim_get_runtime_file("parser/" .. lang .. ".so", false)
+    local paths = vim.api.nvim_get_runtime_file("parser/" .. lang .. ".*", false)
     return #paths > 0
   end
-
-  -- Auto-install missing parsers on startup
-  vim.defer_fn(function()
-    local missing = {}
-    for _, lang in ipairs(wanted_parsers) do
-      if not parser_installed(lang) then
-        table.insert(missing, lang)
-      end
-    end
-    if #missing > 0 then
-      vim.notify("Installing missing parsers: " .. table.concat(missing, ", "), vim.log.levels.INFO)
-      ts.install(missing)
-    end
-  end, 500)
 
   -- User commands
   vim.api.nvim_create_user_command("TSInstall", function(opts)
@@ -722,6 +691,7 @@ end)
 vim.lsp.config('clangd', {
   capabilities = capabilities,
   cmd = { "clangd", "--offset-encoding=utf-16" },
+  filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto" },
 })
 
 vim.lsp.config('lua_ls', {
@@ -739,6 +709,12 @@ vim.lsp.config('sourcekit', {
 vim.lsp.config('ts_ls', { capabilities = capabilities })
 vim.lsp.config('pyright', { capabilities = capabilities })
 vim.lsp.config('gopls', { capabilities = capabilities })
+vim.lsp.config('texlab', {
+  cmd = { 'texlab' },
+  capabilities = capabilities,
+  filetypes = { 'tex', 'plaintex', 'bib' },
+  root_markers = { '.git', '.latexmkrc', 'Makefile', '.texlabroot' },
+})
 
 -- Enable LSP servers (auto-attaches on matching filetypes)
 vim.lsp.enable('clangd')
@@ -747,14 +723,7 @@ vim.lsp.enable('sourcekit')
 vim.lsp.enable('ts_ls')
 vim.lsp.enable('pyright')
 vim.lsp.enable('gopls')
-
--- Trouble and helpers
-require("trouble").setup({ focus = true })
-map("n", "<leader>xw", "<cmd>Trouble diagnostics toggle<CR>", { desc = "Workspace diagnostics" })
-map("n", "<leader>xd", "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", { desc = "Buffer diagnostics" })
-map("n", "<leader>xq", "<cmd>Trouble quickfix toggle<CR>", { desc = "Quickfix" })
-map("n", "<leader>xl", "<cmd>Trouble loclist toggle<CR>", { desc = "Location list" })
-map("n", "<leader>xt", "<cmd>Trouble todo toggle<CR>", { desc = "Todos" })
+vim.lsp.enable('texlab')
 
 require("which-key").setup({})
 
@@ -763,39 +732,147 @@ require("auto-session").setup({ auto_restore_enabled = false })
 map("n", "<leader>wr", "<cmd>SessionRestore<CR>", { desc = "Restore session" })
 map("n", "<leader>ws", "<cmd>SessionSave<CR>", { desc = "Save session" })
 
--- Dashboard
-local alpha = require("alpha")
-local dashboard = require("alpha.themes.dashboard")
-dashboard.section.header.val = {
-  " ▄█     █▄     ▄████████    ▄████████     ███        ▄████████ ",
-  " ███     ███   ███    ███   ███    ███ ▀█████████▄   ███    ███ ",
-  " ███     ███   ███    █▀    ███    █▀     ▀███▀▀██   ███    ███ ",
-  " ███     ███  ▄███▄▄▄      ▄███▄▄▄         ███   ▀   ███    ███ ",
-  " ███     ███ ▀▀███▀▀▀     ▀▀███▀▀▀         ███     ▀███████████ ",
-  " ███     ███   ███    █▄    ███    █▄      ███       ███    ███ ",
-  " ███ ▄█▄ ███   ███    ███   ███    ███     ███       ███    ███ ",
-  "  ▀███▀███▀    ██████████   ██████████    ▄████▀     ███    █▀  ",
-}
+-- Dashboard (snacks.nvim)
+require("snacks").setup({
+  words = { enabled = true },
+  scratch = { enabled = true },
+  gitbrowse = { enabled = true },
+  zen = { enabled = true },
+  bufdelete = { enabled = true },
+  dashboard = {
+    width = 80,
+    pane_gap = 6,
+    preset = {
+      header = {
+        -- Line 1
+        { " ▄█     █▄   ", hl = "RainbowRed" },
+        { "  ▄████████ ", hl = "RainbowOrange" },
+        { "   ▄████████", hl = "RainbowYellow" },
+        { "     ███    ", hl = "RainbowGreen" },
+        { "    ▄████████ \n", hl = "RainbowCyan" },
+        -- Line 2
+        { " ███     ███", hl = "RainbowRed" },
+        { "   ███    ███", hl = "RainbowOrange" },
+        { "   ███    ███", hl = "RainbowYellow" },
+        { " ▀█████████▄ ", hl = "RainbowGreen" },
+        { "  ███    ███ \n", hl = "RainbowCyan" },
+        -- Line 3
+        { " ███     ███", hl = "RainbowRed" },
+        { "   ███    █▀ ", hl = "RainbowOrange" },
+        { "   ███    █▀ ", hl = "RainbowYellow" },
+        { "    ▀███▀▀██ ", hl = "RainbowGreen" },
+        { "  ███    ███ \n", hl = "RainbowCyan" },
+        -- Line 4
+        { " ███     ███", hl = "RainbowRed" },
+        { "  ▄███▄▄▄    ", hl = "RainbowOrange" },
+        { "  ▄███▄▄▄    ", hl = "RainbowYellow" },
+        { "     ███   ▀ ", hl = "RainbowGreen" },
+        { "  ███    ███ \n", hl = "RainbowCyan" },
+        -- Line 5
+        { " ███     ███", hl = "RainbowRed" },
+        { " ▀▀███▀▀▀    ", hl = "RainbowOrange" },
+        { " ▀▀███▀▀▀    ", hl = "RainbowYellow" },
+        { "     ███     ", hl = "RainbowGreen" },
+        { "▀███████████ \n", hl = "RainbowCyan" },
+        -- Line 6
+        { " ███     ███", hl = "RainbowRed" },
+        { "   ███    █▄ ", hl = "RainbowOrange" },
+        { "   ███    █▀ ", hl = "RainbowYellow" },
+        { "     ███     ", hl = "RainbowGreen" },
+        { "  ███    ███ \n", hl = "RainbowCyan" },
+        -- Line 7
+        { " ███ ▄█▄ ███", hl = "RainbowRed" },
+        { "   ███    ███", hl = "RainbowOrange" },
+        { "   ███    ███", hl = "RainbowYellow" },
+        { "     ███     ", hl = "RainbowGreen" },
+        { "  ███    ███ \n", hl = "RainbowCyan" },
+        -- Line 8
+        { "  ▀███▀███▀ ", hl = "RainbowRed" },
+        { "   ██████████", hl = "RainbowOrange" },
+        { "   ██████████", hl = "RainbowYellow" },
+        { "    ▄████▀   ", hl = "RainbowGreen" },
+        { "  ███    █▀  \n", hl = "RainbowCyan" },
+      },
+      keys = {
+        { icon = " ", key = "e", desc = "New File", action = ":ene | startinsert" },
+        { icon = " ", key = "o", desc = "File Explorer", action = ":Oil --float" },
+        { icon = "󰱼 ", key = "f", desc = "Find File", action = ":Telescope find_files" },
+        { icon = " ", key = "g", desc = "Find Word", action = ":Telescope live_grep" },
+        { icon = "󰃭 ", key = "a", desc = "Org Agenda", action = ":lua require('orgmode').action('agenda.prompt')" },
+        { icon = "󰁯 ", key = "r", desc = "Restore Session", action = ":SessionRestore" },
+        { icon = " ", key = "q", desc = "Quit", action = ":qa" },
+      },
+    },
+    sections = {
+      { section = "header" },
+      { section = "keys", gap = 1, padding = 1, pane = 1 },
+      {
+        pane = 2,
+        padding = 1,
+        gap = 1,
+        { icon = "󰃭 ", title = "Agenda" },
+        function()
+          local items = {}
+          local key_chars = "hjklzxcvbnm"
+          local key_idx = 1
+          local today = os.date("%Y-%m-%d")
+          local org_dir = vim.fn.expand("~/org")
 
-dashboard.section.buttons.val = {
-  dashboard.button("e", "  > New File", "<cmd>ene<CR>"),
-  dashboard.button("SPC ee", "  > Toggle file explorer", "<cmd>Oil --float<CR>"),
-  dashboard.button("SPC ff", "󰱼  > Find File", "<cmd>Telescope find_files<CR>"),
-  dashboard.button("SPC fs", "  > Find Word", "<cmd>Telescope live_grep<CR>"),
-  dashboard.button("SPC wr", "󰁯  > Restore Session", "<cmd>SessionRestore<CR>"),
-  dashboard.button("q", "  > Quit NVIM", "<cmd>qa<CR>"),
-}
+          -- Find org files and parse scheduled items for today
+          local org_files = vim.fn.glob(org_dir .. "/**/*.org", false, true)
+          for _, file in ipairs(org_files) do
+            if vim.fn.filereadable(file) == 1 then
+              local lines = vim.fn.readfile(file)
+              for i, line in ipairs(lines) do
+                -- Match SCHEDULED: <YYYY-MM-DD ...> or headlines with TODO
+                local scheduled = line:match("SCHEDULED:%s*<(" .. today .. "[^>]*)>")
+                if scheduled then
+                  -- Look back for the headline
+                  for j = i - 1, 1, -1 do
+                    local headline = lines[j]:match("^%*+ (.+)")
+                    if headline then
+                      local time = scheduled:match("%d%d:%d%d") or "all-day"
+                      local text = headline:gsub("TODO%s*", ""):gsub("DONE%s*", "")
+                      if #text > 30 then text = text:sub(1, 27) .. "..." end
+                      local key = key_chars:sub(key_idx, key_idx)
+                      key_idx = key_idx + 1
+                      table.insert(items, {
+                        icon = "󰥔 ",
+                        key = key,
+                        desc = time .. " " .. text,
+                        indent = 2,
+                        action = ":e " .. file,
+                      })
+                      break
+                    end
+                  end
+                end
+              end
+            end
+          end
 
-alpha.setup(dashboard.opts)
-vim.cmd([[autocmd FileType alpha setlocal nofoldenable]])
+          if #items == 0 then
+            table.insert(items, { icon = "󰃭 ", desc = "No events today" })
+          end
+          return items
+        end,
+      },
+      { section = "recent_files", icon = " ", title = "Recent Files", padding = 1, limit = 8 },
+    },
+  },
+})
+
+-- Snacks keymaps
+map("n", "<leader>zz", function() Snacks.zen() end, { desc = "Zen mode" })
+map("n", "<leader>bd", function() Snacks.bufdelete() end, { desc = "Delete buffer" })
+map("n", "<leader>bs", function() Snacks.scratch() end, { desc = "Scratch buffer" })
+map("n", "<leader>go", function() Snacks.gitbrowse() end, { desc = "Open in GitHub" })
 
 -- Vimtex
-vim.g.tex_flavor = "latex"
 vim.g.vimtex_view_method = "skim"
 vim.g.vimtex_view_skim_sync = 1
 vim.g.vimtex_view_skim_activate = 1
 vim.g.vimtex_compiler_method = "latexmk"
-vim.g.vimtex_compiler_progname = "nvr"
 vim.g.vimtex_compiler_start_on_open = 1
 vim.g.vimtex_compiler_latexmk = {
   continuous = 1,
@@ -820,3 +897,5 @@ vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
     vim.cmd("silent! update")
   end,
 })
+
+vim.keymap.set("n", "<leader>lc", "<cmd>VimtexCompile<CR>")
