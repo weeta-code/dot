@@ -12,7 +12,7 @@ vim.g.maplocalleader = " "
 vim.g.netrw_liststyle = 3
 vim.g.tex_flavor = "latex"
 
-vim.o.shell = "/usr/bin/zsh"
+vim.o.shell = "/bin/zsh"
 vim.o.shellcmdflag = "-l -c"
 
 local opt = vim.opt
@@ -36,7 +36,7 @@ opt.splitbelow = true
 opt.termguicolors = true
 opt.completeopt = "menu,menuone,noinsert,fuzzy"
 opt.winborder = "rounded" -- 0.11+ default border for floating windows
-
+opt.autochdir = true
 vim.filetype.add({ extension = { tex = "tex" } })
 
 -- =============================================================================
@@ -73,6 +73,17 @@ vim.pack.add({
 
   -- Colorscheme
   { src = "https://github.com/oskarnurm/koda.nvim" },
+
+  -- Fun things
+  { src = "https://github.com/NicolasGB/jj.nvim" },
+  { src = "https://github.com/TheNoeTrevino/haunt.nvim" },
+  { src = "https://github.com/bngarren/checkmate.nvim" },
+  { src = "https://github.com/SmiteshP/nvim-navic" },
+  { src = "https://github.com/zk-org/zk-nvim" },
+  { src = "https://github.com/sindrets/diffview.nvim" },
+
+  -- LLM workflow (chat / inline / actions) — OpenRouter + local Ollama on the mini
+  { src = "https://github.com/olimorris/codecompanion.nvim" },
 })
 
 -- =============================================================================
@@ -91,16 +102,16 @@ require("koda").setup({
 })
 require("koda").load("dark")
 
--- Dashboard highlight palette (koda's semantic colors)
+-- Dashboard highlight palette (Koda dark)
 local hl = vim.api.nvim_set_hl
-hl(0, "RainbowCyan",                { fg = "#5abfb5" })
-hl(0, "RainbowBlue",                { fg = "#458ee6" })
-hl(0, "RainbowRed",                 { fg = "#ff7676" })
-hl(0, "RainbowGreen",               { fg = "#86cd82" })
-hl(0, "RainbowOrange",              { fg = "#ff5733" })
-hl(0, "RainbowYellow",              { fg = "#d9ba73" })
-hl(0, "RainbowBrightYellow",        { fg = "#d9ba73" })
-hl(0, "RainbowPurple",              { fg = "#f2a4db" })
+hl(0, "SnacksDashboardHeader",      { fg = "#b0b0b0" })
+hl(0, "SnacksDashboardIcon",        { fg = "#b0b0b0" })
+hl(0, "SnacksDashboardKey",         { fg = "#d9ba73" })
+hl(0, "SnacksDashboardDesc",        { fg = "#b0b0b0" })
+hl(0, "SnacksDashboardFile",        { fg = "#50585d" })
+hl(0, "SnacksDashboardDir",         { fg = "#777777" })
+hl(0, "SnacksDashboardTitle",       { fg = "#ffffff", bold = true })
+hl(0, "SnacksDashboardSpecial",     { fg = "#458ee6" })
 
 -- =============================================================================
 -- Keymaps (basic editing)
@@ -115,7 +126,7 @@ map("n", "<leader>sh", "<C-w>s",              { desc = "Split horizontally" })
 map("n", "<leader>se", "<C-w>=",              { desc = "Equalize splits" })
 map("n", "<leader>sx", "<cmd>close<CR>",      { desc = "Close split" })
 map("n", "<leader>to", "<cmd>tabnew<CR>",     { desc = "New tab" })
-map("n", "<leader>tx", "<cmd>tabclose<CR>",   { desc = "Close tab" })
+map("n", "<leader>tc", "<cmd>tabclose<CR>",   { desc = "Close tab" })
 map("n", "<leader>tn", "<cmd>tabn<CR>",       { desc = "Next tab" })
 map("n", "<leader>tp", "<cmd>tabp<CR>",       { desc = "Prev tab" })
 -- Terminal-mode window jumps
@@ -138,7 +149,81 @@ vim.api.nvim_create_autocmd("BufEnter", {
 -- UI plugins
 -- =============================================================================
 require("nvim-web-devicons").setup({ default = true })
-require("lualine").setup({})
+-- CodeCompanion request spinner — a visible "AI in flight" indicator in lualine.
+-- Driven by the User CodeCompanionRequest{Started,Finished} events, so it covers
+-- inline (which writes silently, with no buffer streaming) as well as chat.
+local cc_spinner = {
+  frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
+  idx = 1,
+  active = 0,        -- in-flight request count; each Started has a matching Finished
+  model = "",
+  timer = nil,
+}
+
+local function cc_spinner_tick()
+  cc_spinner.idx = (cc_spinner.idx % #cc_spinner.frames) + 1
+  vim.cmd("redrawstatus")
+end
+
+local function cc_spinner_start()
+  if cc_spinner.timer then return end
+  cc_spinner.timer = vim.uv.new_timer()
+  cc_spinner.timer:start(0, 100, vim.schedule_wrap(cc_spinner_tick))
+end
+
+local function cc_spinner_stop()
+  if cc_spinner.timer then
+    cc_spinner.timer:stop()
+    cc_spinner.timer:close()
+    cc_spinner.timer = nil
+  end
+  vim.schedule(function() vim.cmd("redrawstatus") end)
+end
+
+-- lualine component: spinner + short model name while a request is running, else ""
+local function cc_status()
+  if cc_spinner.active <= 0 then return "" end
+  local short = cc_spinner.model ~= "" and ("  " .. cc_spinner.model:gsub("^.*/", "")) or ""
+  return cc_spinner.frames[cc_spinner.idx] .. "  AI" .. short
+end
+
+local cc_spinner_group = vim.api.nvim_create_augroup("CodeCompanionSpinner", { clear = true })
+vim.api.nvim_create_autocmd("User", {
+  group = cc_spinner_group,
+  pattern = "CodeCompanionRequestStarted",
+  callback = function(ev)
+    cc_spinner.active = cc_spinner.active + 1
+    local d = ev.data
+    if d and d.adapter and d.adapter.model and d.adapter.model ~= "" then
+      cc_spinner.model = d.adapter.model
+    end
+    cc_spinner_start()
+  end,
+})
+vim.api.nvim_create_autocmd("User", {
+  group = cc_spinner_group,
+  pattern = "CodeCompanionRequestFinished",
+  callback = function()
+    cc_spinner.active = math.max(0, cc_spinner.active - 1)
+    if cc_spinner.active == 0 then cc_spinner_stop() end
+  end,
+})
+
+require("lualine").setup({
+  options = {
+    component_separators = { left = "", right = "" },
+    section_separators = { left = "", right = "" },
+    globalstatus = true,
+  },
+  sections = {
+    -- default lualine_x is { encoding, fileformat, filetype }; prepend the AI spinner
+    lualine_x = { cc_status, "encoding", "fileformat", "filetype" },
+    lualine_z = {
+      { "tabs", use_mode_colors = true, show_modified_status = false, mode = 1,
+        fmt = function(_, ctx) return ctx.current and "" or "" end}
+    },
+  },
+})
 require("ibl").setup({ indent = { char = "┊" } })
 require("which-key").setup({})
 
@@ -147,6 +232,14 @@ require("smear_cursor").setup({
   smear_insert_mode = true,
   smear_between_neighbor_lines = true,
 })
+
+local navic = require("nvim-navic")
+
+local on_attach = function(client, bufnr)
+  if client.server_capabilities.documentSymbolProvider then
+    navic.attach(client, bufnr)
+  end
+end
 
 -- =============================================================================
 -- mini.nvim (pairs + surround)
@@ -163,10 +256,10 @@ require("mini.surround").setup({
 local flash = require("flash")
 flash.setup()
 map({ "n", "x", "o" }, "m", flash.jump,                { desc = "Flash jump" })
-map({ "n", "x", "o" }, "M", flash.treesitter,          { desc = "Flash treesitter" })
-map("o",               "r", flash.remote,              { desc = "Flash remote" })
-map({ "x", "o" },      "R", flash.treesitter_search,   { desc = "Flash treesitter search" })
-map("c",               "<C-s>", flash.toggle,          { desc = "Flash toggle in cmdline" })
+-- map({ "n", "x", "o" }, "Mu", flash.treesitter,          { desc = "Flash treesitter" })
+-- map("o",               "r", flash.remote,              { desc = "Flash remote" })
+-- map({ "x", "o" },      "R", flash.treesitter_search,   { desc = "Flash treesitter search" })
+-- map("c",               "<C-s>", flash.toggle,          { desc = "Flash toggle in cmdline" })
 
 -- =============================================================================
 -- oil.nvim
@@ -187,6 +280,318 @@ map("n", "-",          function() require("oil").open() end, { desc = "Oil paren
 map("n", "<leader>ee", "<cmd>Oil --float<CR>",               { desc = "Oil (floating)" })
 map("n", "<leader>ef", "<cmd>Oil<CR>",                       { desc = "Oil (full)" })
 
+-- =============================================================================
+-- diffview
+-- =============================================================================
+require("diffview").setup({
+  view = {
+    default = {
+      layout = "diff2_vertical",
+    },
+    merge_tool = {
+      layout = "diff3_mixed",
+    },
+    file_history_view = {
+      layout = "diff2_vertical"
+    }
+  },
+
+})
+
+-- =============================================================================
+-- JJ
+-- =============================================================================
+require("jj").setup({
+  picker = { snacks = {} },
+  editor = {
+    auto_insert = false,
+    window = {
+      type = "floating",
+      floating_width = 0.8,
+      floating_height = 0.9
+    },
+  },
+
+  terminal = {
+    cursor_render_delay = 10,
+  },
+  
+  diff = {
+    backend = "diffview",
+  },
+
+  keymaps = {
+    -- Log buffer keymaps (set to nil to disable)
+    log = {
+      edit = "<CR>",                      -- Edit revision under cursor
+      edit_immutable = "<S-CR>",          -- Edit revision (ignore immutability)
+      describe = "d",                     -- Describe revision under cursor
+      diff = "<S-d>",                     -- Diff revision under cursor
+      edit = "e",                         -- Edit revision under cursor
+      new = "n",                          -- Create new change branching off
+      new_after = "<C-n>",                -- Create new change after revision
+      new_after_immutable = "<S-n>",      -- Create new change after (ignore immutability)
+      undo = "<S-u>",                     -- Undo last operation
+      redo = "<S-r>",                     -- Redo last undone operation
+      abandon = "a",                      -- Abandon revision under cursor
+      bookmark = "b",                     -- Create or move bookmark to revision under cursor
+      bookmark_del = "B",                 -- Delete bookmark of revision under cursor
+      fetch = "f",                        -- Fetch from remote
+      push = "p",                         -- Push bookmark of revision under cursor
+      push_all = "<S-p>",                 -- Push all changes to remote
+      open_pr = "o",                      -- Open PR/MR for revision under cursor
+      open_pr_list = "<S-o>",             -- Open PR/MR by selecting from all bookmarks
+      rebase = "r",                       -- Enter rebase mode targeting revision under cursor or selected revisions
+      rebase_mode = {
+        onto = { "<CR>", "o" },           -- Select revision under cursor as rebase onto destination
+        after = "a",                      -- Rebase after revision under cursor
+        before = "b",                     -- Rebase before revision under cursor
+        onto_immutable = { "<S-CR>", "<S-o>" }, -- Select revision  as a rebase onto destination (ignore immutability)
+        after_immutable = "<S-a>",              -- Rebase after revision under cursor (ignore immutability)
+        before_immutable = "<S-b>",             -- Rebase before revision under cursor (ignore immutability)
+        exit_mode = { "<Esc>", "<C-c>" }, -- Exit rebase mode
+      },
+      duplicate = "<C-y>",                -- Enter duplicate mode targeting revision under cursor or selected revisions
+      duplicate_mode = {
+        onto = { "<CR>", "o" },           -- Select revision under cursor as duplicate onto destination
+        after = "a",                      -- Duplicate after revision under cursor
+        before = "b",                     -- Duplicate before revision under cursor
+        onto_immutable = { "<S-CR>", "<S-o>" }, -- Duplicate onto revision under cursor (ignore immutability)
+        after_immutable = "<S-a>",              -- Duplicate after revision under cursor (ignore immutability)
+        before_immutable = "<S-b>",             -- Duplicate before revision under cursor (ignore immutability)
+        exit_mode = { "<Esc>", "<C-c>" }, -- Exit duplicate mode
+      },
+      squash = "s",                       -- Enter squash mode targeting revision under cursor or selected revisions
+      squash_mode = {
+        into = "<CR>",                     -- Squash into revision under cursor
+        into_immutable = "<S-CR>",         -- Squash into revision under cursor (ignore immutability)
+        exit_mode = { "<Esc>", "<C-c>" }, -- Exit squash mode
+      },
+      quick_squash = "<S-s>",             -- Quick squash revision under cursor into its parent (ignore immutability)
+      split = "<C-s>",                    -- Split the revision under cursor
+      history = "<S-h>",                  -- Show a history-aware diff for the selected revision range
+      change_revset = "<C-r>",            -- Change the revset(s) being viewed in the log buffer
+      tag_set = "<S-t>",                  -- Create a tag on the revision under cursor
+      summary = "<S-k>",                  -- Show summary tooltip for revision under cursor
+      select_next_revision = "gj",        -- Move cursor to the next revision in the log
+      select_prev_revision = "gk",        -- Move cursor to the previous revision in the log
+      summary_tooltip = {
+        diff = "<S-d>",                   -- Diff file at this revision
+        edit = "<CR>",                    -- Edit revision and open file
+        edit_immutable = "<S-CR>",        -- Edit revision (ignore immutability) and open file
+        edit_file = "o",                  -- Open the file under cursor in a new tab like `:Jtabedit` would
+      },
+    },
+    -- Status buffer keymaps (set to nil to disable)
+    status = {
+      open_file = "<CR>",                 -- Open file under cursor
+      restore_file = "<S-x>",             -- Restore file under cursor
+    },
+    -- Close keymaps (shared across all buffers)
+    close = { "q", "<Esc>" },
+    -- Floating buffer keymaps
+    floating = {
+      close = "q",                          -- Close floating buffer
+      hide = "<Esc>",                       -- Hide floating buffer
+    },
+  },
+})
+
+-- =============================================================================
+-- Haunt.nvim
+-- =============================================================================
+do
+  local ok, project = pcall(require, "haunt.project")
+  if ok then
+    -- Haunt runs several git probes during UIEnter and bookmark saves. Using
+    -- vim.system avoids the slow shell path behind vim.fn.systemlist().
+    project.run_git = function(cmd)
+      local args = vim.split(cmd, " ", { trimempty = true })
+      if args[1] ~= "git" then
+        return nil
+      end
+
+      local result = vim.system(args, { text = true }):wait()
+      if result.code ~= 0 then
+        return nil
+      end
+
+      local stdout = vim.trim(result.stdout or "")
+      if stdout == "" then
+        return { "" }
+      end
+      return vim.split(stdout, "\n", { plain = true })
+    end
+
+    -- Persistence fix: haunt keys each storage file by project identity
+    -- (git root-commit -> git toplevel -> cwd), so bookmarks scatter by repo /
+    -- launch dir and get swapped out on any global :cd. We always want ONE
+    -- global store: marks persist everywhere, survive cwd changes, and stay put
+    -- regardless of whether a file lives in a git repo. (fzf/telescope are
+    -- already dir-scoped; haunt is the cross-everything layer.)
+    project.get_info = function()
+      return { root = nil, branch = nil, project_id = "haunt-global" }
+    end
+  end
+end
+
+map('n', '<leader>hm', function() require('haunt.api').toggle_annotation() end,
+{ desc = "Toggle bookmark annotation" })
+
+-- Navigate bookmarks
+map('n', '<leader>hn', function() require('haunt.api').next() end,
+{ desc = "Next bookmark" })
+map('n', '<leader>hp', function() require('haunt.api').prev() end,
+{ desc = "Previous bookmark" })
+
+-- Annotate bookmark
+map('n', '<leader>ha', function() require('haunt.api').annotate() end,
+{ desc = "Annotate bookmark" })
+
+-- Delete bookmark
+map('n', '<leader>hd', function() require('haunt.api').delete() end,
+{ desc = "Delete bookmark" })
+
+-- Clear bookmarks
+map('n', '<leader>hc', function() require('haunt.api').clear() end,
+{ desc = "Clear bookmarks in file" })
+map('n', '<leader>hC', function() require('haunt.api').clear_all() end,
+{ desc = "Clear all bookmarks" })
+
+-- List bookmarks
+map('n', '<leader>hl', function() require('haunt.picker').show() end,
+{ desc = "List bookmarks" })
+
+-- =============================================================================
+-- Checkmate
+-- =============================================================================
+require("checkmate").setup({
+  files = { "/home/vectors/todo.md", "todo.md", "TODO.md" },
+  -- Metadata tags. The built-in @priority/@started/@done stay as-is (keys
+  -- <leader>Tp/Ts/Td); this block only ADDS @due. Naming an existing tag here
+  -- would REPLACE it wholesale (no field merge), so we leave those alone.
+  metadata = {
+    -- @due(YYYY-MM-DD) — goes red+bold once the date is past
+    due = {
+      style = function(context)
+        local y, m, d = tostring(context.value):match("(%d+)-(%d+)-(%d+)")
+        if y then
+          local due_at = os.time({ year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 23, min = 59 })
+          if due_at < os.time() then
+            return { fg = "#ff5555", bold = true } -- overdue
+          end
+        end
+        return { fg = "#f1fa8c" } -- upcoming
+      end,
+      get_value = function()
+        return tostring(os.date("%Y-%m-%d")) -- defaults to today; edit to your deadline
+      end,
+      key = "<leader>Tu",
+      sort_order = 15,           -- sits between @priority (10) and @started (20)
+      jump_to_on_insert = "value",
+      select_on_insert = true,   -- drops cursor onto the date so you can type it
+    },
+  },
+  keys = {
+    ["<leader>bb"] = {
+      rhs = "<cmd>Checkmate toggle<CR>",
+      desc = "Toggle todo item",
+      modes = { "n", "v" },
+    },
+    ["<leader>bc"] = {
+      rhs = "<cmd>Checkmate check<CR>",
+      desc = "Set todo item as checked (done)",
+      modes = { "n", "v" },
+    },
+    ["<leader>bu"] = {
+      rhs = "<cmd>Checkmate uncheck<CR>",
+      desc = "Set todo item as unchecked (not done)",
+      modes = { "n", "v" },
+    },
+    ["<leader>b="] = {
+      rhs = "<cmd>Checkmate cycle_next<CR>",
+      desc = "Cycle todo item(s) to the next state",
+      modes = { "n", "v" },
+    },
+    ["<leader>b-"] = {
+      rhs = "<cmd>Checkmate cycle_previous<CR>",
+      desc = "Cycle todo item(s) to the previous state",
+      modes = { "n", "v" },
+    },
+    ["<leader>bn"] = {
+      rhs = "<cmd>Checkmate create<CR>",
+      desc = "Create todo item",
+      modes = { "n", "v" },
+    },
+    ["<leader>br"] = {
+      rhs = "<cmd>Checkmate remove<CR>",
+      desc = "Remove todo marker (convert to text)",
+      modes = { "n", "v" },
+    },
+    ["<leader>bR"] = {
+      rhs = "<cmd>Checkmate remove_all_metadata<CR>",
+      desc = "Remove all metadata from a todo item",
+      modes = { "n", "v" },
+    },
+    ["<leader>ba"] = {
+      rhs = "<cmd>Checkmate archive<CR>",
+      desc = "Archive checked/completed todo items (move to bottom section)",
+      modes = { "n" },
+    },
+    ["<leader>bF"] = {
+      rhs = "<cmd>Checkmate select_todo<CR>",
+      desc = "Open a picker to select a todo from the current buffer",
+      modes = { "n" },
+    },
+    ["<leader>bv"] = {
+      rhs = "<cmd>Checkmate metadata select_value<CR>",
+      desc = "Update the value of a metadata tag under the cursor",
+      modes = { "n" },
+    },
+    ["<leader>b]"] = {
+      rhs = "<cmd>Checkmate metadata jump_next<CR>",
+      desc = "Move cursor to next metadata tag",
+      modes = { "n" },
+    },
+    ["<leader>b["] = {
+      rhs = "<cmd>Checkmate metadata jump_previous<CR>",
+      desc = "Move cursor to previous metadata tag",
+      modes = { "n" },
+    },
+  }
+})
+
+map("n", "<leader>bw", function() vim.cmd("edit " .. vim.fn.fnameescape(vim.fn.expand("/home/vectors/todo.md"))) end, { desc = "open global tasks" })
+-- =============================================================================
+
+-- =============================================================================
+-- zk — zettelkasten notes (notebook at ~/notes, set via ZK_NOTEBOOK_DIR)
+-- =============================================================================
+require("zk").setup({
+  picker = "snacks_picker",          -- reuse snacks.nvim; no new picker dependency
+  lsp = {
+    config = { cmd = { "zk", "lsp" }, name = "zk" },
+    auto_attach = { enabled = true }, -- link completion etc., only active inside a notebook
+  },
+})
+
+local zk = require("zk")
+local zkc = require("zk.commands")
+
+map("n", "<leader>zn", function() zk.new({ title = vim.fn.input("Title: ") }) end,
+  { desc = "zk: new note" })
+map("n", "<leader>zo", function() zkc.get("ZkNotes")({ sort = { "modified" } }) end,
+  { desc = "zk: open / list notes" })
+map("n", "<leader>zf", function() zkc.get("ZkNotes")({ sort = { "modified" }, match = { vim.fn.input("Search: ") } }) end,
+  { desc = "zk: search notes (full-text)" })
+map("n", "<leader>zt", function() zkc.get("ZkTags")() end,
+  { desc = "zk: browse tags" })
+map("n", "<leader>zb", function() zkc.get("ZkBacklinks")() end,
+  { desc = "zk: backlinks for this note" })
+map("n", "<leader>zl", function() zkc.get("ZkInsertLink")() end,
+  { desc = "zk: insert link to a note" })
+map("v", "<leader>zn", ":'<,'>ZkNewFromTitleSelection<CR>",
+  { desc = "zk: new note from selection" })
 -- =============================================================================
 -- Treesitter (parsers + queries; built-in highlight)
 -- =============================================================================
@@ -243,6 +648,13 @@ local capabilities = require("blink.cmp").get_lsp_capabilities()
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
     local buf = args.buf
+    local client = vim.lsp.get_client_by_id(args.data.client_id)
+    if not client then
+      return
+    end
+
+    on_attach(client, buf)
+
     local o = { buffer = buf }
     map("n", "gd",         vim.lsp.buf.definition,     o)
     map("n", "gr",         vim.lsp.buf.references,     o)
@@ -266,10 +678,40 @@ vim.lsp.config("texlab",   { capabilities = capabilities, cmd = { "texlab" }, fi
 
 vim.lsp.enable({ "clangd", "lua_ls", "sourcekit", "ts_ls", "pyright", "gopls", "texlab" })
 
+
 -- =============================================================================
 -- snacks.nvim — picker (replaces telescope), terminal (replaces floaterm),
 -- ui.input/select (replaces dressing), dashboard, gitbrowse, zen, scratch
 -- =============================================================================
+local function pad_dashboard_header(header)
+  local lines = vim.split(header, "\n", { plain = true })
+  local width = 0
+  for _, line in ipairs(lines) do
+    width = math.max(width, vim.fn.strdisplaywidth(line))
+  end
+  for i, line in ipairs(lines) do
+    lines[i] = line .. (" "):rep(width - vim.fn.strdisplaywidth(line))
+  end
+  return table.concat(lines, "\n")
+end
+
+local dashboard_header = pad_dashboard_header([[
+                                              s                
+  x=~                                        :8                
+ 88x.   .e.   .e.                           .88                
+'8888X.x888:.x888       .u         .u      :888ooo       u     
+ `8888  888X '888k   ud8888.    ud8888.  -*8888888    us888u.  
+  X888  888X  888X :888'8888. :888'8888.   8888    .@88 "8888" 
+  X888  888X  888X d888 '88%" d888 '88%"   8888    9888  9888  
+  X888  888X  888X 8888.+"    8888.+"      8888    9888  9888  
+ .X888  888X. 888~ 8888L      8888L       .8888Lu= 9888  9888  
+ `%88%``"*888Y"    '8888c. .+ '8888c. .+  ^%888*   9888  9888  
+   `~     `"        "88888%    "88888%      'Y"    "888*""888" 
+                      "YP'       "YP'               ^Y"   ^Y'  ]])
+                                                               
+                                                               
+                                                               
+
 require("snacks").setup({
   bigfile     = { enabled = true },
   bufdelete   = { enabled = true },
@@ -278,23 +720,13 @@ require("snacks").setup({
   picker      = { enabled = true },        -- replaces telescope
   quickfile   = { enabled = true },
   scratch     = { enabled = true },
-  terminal    = { enabled = true },        -- replaces floaterm
   words       = { enabled = true },
   zen         = { enabled = true },
   dashboard = {
-    width    = 80,
-    pane_gap = 6,
+    width    = 48,
+    pane_gap = 32,
     preset = {
-      header = {
-        { " ▄█       █▄   ", hl = "RainbowRed" },    { "  ▄████████ ", hl = "RainbowOrange" },{ "   ▄████████", hl = "RainbowYellow" }, { "     ███    ", hl = "RainbowGreen" },{ "   ▄████████ \n", hl = "RainbowCyan" },
-        { " ███     ███", hl = "RainbowRed" },     { "   ███    ███", hl = "RainbowOrange" },{ "   ███    ███", hl = "RainbowYellow" },{ " ▀█████████▄ ", hl = "RainbowGreen" },{ "  ███    ███ \n", hl = "RainbowCyan" },
-        { " ███     ███", hl = "RainbowRed" },     { "   ███    █▀ ", hl = "RainbowOrange" },{ "   ███    █▀ ", hl = "RainbowYellow" },{ "    ▀███▀▀██ ", hl = "RainbowGreen" },{ "  ███    ███ \n", hl = "RainbowCyan" },
-        { " ███     ███", hl = "RainbowRed" },     { "  ▄███▄▄▄    ", hl = "RainbowOrange" },{ "  ▄███▄▄▄    ", hl = "RainbowYellow" },{ "     ███   ▀ ", hl = "RainbowGreen" },{ "  ███    ███ \n", hl = "RainbowCyan" },
-        { " ███     ███", hl = "RainbowRed" },     { " ▀▀███▀▀▀    ", hl = "RainbowOrange" },{ " ▀▀███▀▀▀    ", hl = "RainbowYellow" },{ "     ███     ", hl = "RainbowGreen" },{ "▀███████████ \n", hl = "RainbowCyan" },
-        { " ███     ███", hl = "RainbowRed" },     { "   ███    █▄ ", hl = "RainbowOrange" },{ "   ███    █▀ ", hl = "RainbowYellow" },{ "     ███     ", hl = "RainbowGreen" },{ "  ███    ███ \n", hl = "RainbowCyan" },
-        { " ███ ▄█▄ ███", hl = "RainbowRed" },     { "   ███    ███", hl = "RainbowOrange" },{ "   ███    ███", hl = "RainbowYellow" },{ "     ███     ", hl = "RainbowGreen" },{ "  ███    ███ \n", hl = "RainbowCyan" },
-        { "  ▀███▀███▀ ", hl = "RainbowRed" },     { "   ██████████", hl = "RainbowOrange" },{ "   ██████████", hl = "RainbowYellow" },{ "    ▄████▀   ", hl = "RainbowGreen" },{ "  ███    █▀  \n", hl = "RainbowCyan" },
-      },
+      header = dashboard_header,
       keys = {
         { icon = " ",  key = "e", desc = "New File",       action = ":ene | startinsert" },
         { icon = " ",  key = "o", desc = "File Explorer",  action = ":Oil --float" },
@@ -306,7 +738,6 @@ require("snacks").setup({
     sections = {
       { section = "header" },
       { section = "keys", gap = 1, padding = 1, pane = 1 },
-
       { section = "recent_files", icon = " ", title = "Recent Files", padding = 1, limit = 5 },
     },
   },
@@ -392,3 +823,79 @@ vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
   callback = function() vim.cmd("silent! update") end,
 })
 map("n", "<leader>lc", "<cmd>VimtexCompile<CR>", { desc = "VimTeX compile" })
+
+-- =============================================================================
+-- codecompanion.nvim — LLM workflow
+--   openrouter : cloud frontier models (OpenAI-compatible). Reads $OPENROUTER_API_KEY.
+--   ollama     : local LLM on the Mac mini over Tailscale (victors-mac-mini:11434).
+-- chat/inline/cmd default to openrouter. Inside a chat, `ga` switches adapter+model
+-- live; <leader>al opens a chat pinned to the local mini.
+-- =============================================================================
+require("codecompanion").setup({
+  adapters = {
+    http = {
+      openrouter = function()
+        return require("codecompanion.adapters").extend("openai_compatible", {
+          env = {
+            url = "https://openrouter.ai/api",
+            api_key = "OPENROUTER_API_KEY",
+            chat_url = "/v1/chat/completions",
+          },
+          schema = {
+            model = { default = "deepseek/deepseek-v4-flash" },
+          },
+          -- Merged into the request body top-level (codecompanion http.lua reads
+          -- adapter.body). Pins routing to the Wafer provider; allow_fallbacks
+          -- keeps it working if Wafer is unavailable. Per-chat model switches via
+          -- `ga` (e.g. z-ai/glm-5.2) reuse this same body, so non-DeepSeek models
+          -- fall through to their own providers automatically.
+          body = {
+            provider = { order = { "wafer/fp4" }, allow_fallbacks = true },
+          },
+        })
+      end,
+      ollama = function()
+        -- url falls back to $OLLAMA_HOST, but pin it so nvim works even if the
+        -- env var isn't exported in a given shell.
+        return require("codecompanion.adapters").extend("ollama", {
+          env = { url = "http://victors-mac-mini:11434" },
+          schema = {
+            model = { default = "gemma4:12b" },
+          },
+        })
+      end,
+    },
+  },
+  interactions = {
+    -- Role routing:
+    --   chat   -> deepseek-v4-flash (Wafer)  : larger tasks, repo search, Q&A
+    --   inline -> local mini (gemma4:12b)     : quick inline edits / "whatnot"
+    --   cmd    -> local mini                  : small one-shot command generation
+    -- GLM 5.2 is last-resort only — reach it per-chat with `ga`, or <leader>ag.
+    chat   = { adapter = "openrouter" },
+    inline = { adapter = "ollama" },
+    cmd    = { adapter = "ollama" },
+  },
+  display = {
+    chat = {
+      window = { layout = "vertical", width = 0.42 },
+    },
+  },
+})
+
+-- Keymaps (mnemonic <leader>a = "ai")
+map({ "n", "v" }, "<leader>aa", "<cmd>CodeCompanionChat Toggle<CR>", { desc = "AI: toggle chat" })
+map("v",          "<leader>ac", "<cmd>CodeCompanionChat Add<CR>",    { desc = "AI: add selection to chat" })
+map({ "n", "v" }, "<leader>ap", "<cmd>CodeCompanionActions<CR>",     { desc = "AI: action palette" })
+map("n",          "<leader>al", "<cmd>CodeCompanionChat adapter=ollama<CR>", { desc = "AI: chat on local mini" })
+map("n",          "<leader>ag", "<cmd>CodeCompanionChat adapter=openrouter model=z-ai/glm-5.2<CR>", { desc = "AI: GLM 5.2 (last resort)" })
+-- No <CR>: drops you into the command line prefilled, so you can type an
+-- arbitrarily long prompt and hit Enter when ready. Generates a `:` Ex command.
+map({ "n", "v" }, "<leader>ax", ":CodeCompanionCmd ", { desc = "AI: generate :command (extended prompt)" })
+map({ "n", "v" }, "<leader>ai", function()
+  vim.ui.input({ prompt = "AI inline: " }, function(instruction)
+    if instruction and instruction ~= "" then
+      vim.cmd("CodeCompanion " .. instruction)
+    end
+  end)
+end, { desc = "AI: inline edit" })

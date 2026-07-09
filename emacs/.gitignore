@@ -1,0 +1,25 @@
+# --- credentials (NEVER commit) ---
+secrets.el
+
+# --- installed packages / build artifacts (reproducible from init.el) ---
+/elpa/
+/eln-cache/
+*.elc
+
+# --- downloaded tree-sitter grammars ---
+/tree-sitter/
+
+# --- runtime state, caches, history ---
+/auto-save-list/
+/transient/
+/history
+/recentf
+/bookmarks
+/projects
+/.org-generic-id-locations
+/.org-id-locations
+/org-roam.db
+/.org-roam.db
+/.cache/
+/var/
+/.local/

@@ -1,0 +1,20 @@
+# credentials — never commit
+gh/hosts.yml
+github-copilot/
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+.env
+.env.*
+secrets.*
+# local machine state / junk
+tmp/
+ncmpcpp/error.log
+cagent/.cagent_first_run
+MusicBrainz/.Picard.ini.synclock
+**/.claude/settings.local.json
+**/auto-save-list/
+*.tuxedo-lock
+*.synclock
+.DS_Store
